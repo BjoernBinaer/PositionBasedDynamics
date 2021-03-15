@@ -5,10 +5,48 @@
 #include "Common/Common.h"
 #include "RigidBodyGeometry.h"
 #include "Utils/VolumeIntegration.h"
+#include "extern/tinyexpr/tinyexpr.h"
 
 
 namespace PBD
 {
+	struct PrescribedTrajectory
+	{
+		/** start of the prescribed motion */
+		Real m_startTime;
+		/** end of the prescribed motion */
+		Real m_endTime;
+
+		/** prescribed motion (by a time dependent funciton) */
+		std::string m_prescribedTrajectory[3];
+		/** prescribed rotation (by a time dependent function) */
+		std::string m_prescribedRotation;
+		/** rotation axis */
+		Vector3r m_rotationAxis;
+
+		PrescribedTrajectory()
+			: m_startTime(0)
+			, m_endTime(0)
+		{
+			for (int i = 0; i < 3; i++)
+				m_prescribedTrajectory[i] = "";
+			m_prescribedRotation = "";
+			m_rotationAxis = Vector3r::Zero();
+		}
+
+		PrescribedTrajectory(Real startTime, Real endTime,
+			std::string presTraj[3], std::string presRot,
+			Vector3r rotAxis)
+			: m_startTime(startTime)
+			, m_endTime(endTime)
+			, m_rotationAxis(rotAxis)
+		{
+			for (int i = 0; i < 3; i++)
+				m_prescribedTrajectory[i] = presTraj[i];
+			m_prescribedRotation = presRot;
+		}
+	};
+
 	/** This class encapsulates the state of a rigid body.
 	 */
 	class RigidBody
@@ -73,6 +111,9 @@ namespace PBD
 			Vector3r m_transformation_v2;
 			Vector3r m_transformation_R_X_v1;
 			
+			Real m_startTime;
+			Real m_endTime;
+
 		public:
 			RigidBody(void) 
 			{
@@ -146,6 +187,11 @@ namespace PBD
 				getGeometry().initMesh(vertices.size(), mesh.numFaces(), &vertices.getPosition(0), mesh.getFaces().data(), mesh.getUVIndices(), mesh.getUVs(), scale);
 				determineMassProperties(density);
 				getGeometry().updateMeshTransformation(getPosition(), getRotationMatrix());
+			}
+
+			void prescribed_step(Real h)
+			{
+				
 			}
 
 			void reset()

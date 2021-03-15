@@ -59,10 +59,15 @@ if(TARGET Ext_GenericParameters)
 	add_dependencies(Simulation Ext_GenericParameters)
 endif()
 
+############################################################
+# Tinyexpr
+############################################################
+add_dependencies(Simulation tinyexpr)
+
 find_package( Eigen3 REQUIRED )
 include_directories( ${EIGEN3_INCLUDE_DIR} )
 
-target_link_libraries(Simulation PositionBasedDynamics)
+target_link_libraries(Simulation PositionBasedDynamics tinyexpr)
 
 
 install(TARGETS Simulation

@@ -46,7 +46,6 @@ void DistanceFieldCollisionDetection::collisionDetection(SimulationModel &model)
 		}
 	}
 
-	//omp_set_num_threads(1);
 	std::vector<std::vector<ContactData> > contacts_mt;	
 #ifdef _DEBUG
 	const unsigned int maxThreads = 1;

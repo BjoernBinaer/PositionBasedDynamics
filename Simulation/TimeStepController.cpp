@@ -79,6 +79,8 @@ void TimeStepController::step(SimulationModel &model)
 	ParticleData &pd = model.getParticles();
 	OrientationData &od = model.getOrientations();
 
+	// Check if some prescribed motion is provided for the rigid body / particles / orientations
+
 	const int numBodies = (int)rb.size();
 	#pragma omp parallel if(numBodies > MIN_PARALLEL_SIZE) default(shared)
 	{

@@ -7,6 +7,12 @@
 
 namespace PBD
 {
+	/** This enum represents the state of the particle
+	* inside the simulation, i.e. whether it is animated,
+	* simulated, fixed or any other possible state.
+	*/
+	enum class ParticleState { Simulated = 0, Animated, NumParticleStates };
+
 	/** This class encapsulates the state of all vertices.
 	* All parameters are stored in individual arrays.
 	*/
@@ -86,12 +92,15 @@ namespace PBD
 	class ParticleData
 	{
 		private:
+			// Particle state
+			std::vector<ParticleState> m_particleStates;
+
 			// Mass
-			// If the mass is zero, the particle is static
+			// If the mass is zero, the particle is fixed
 			std::vector<Real> m_masses;
 			std::vector<Real> m_invMasses;
 
-			// Dynamic state
+			// Particle parameters
 			std::vector<Vector3r> m_x0;
 			std::vector<Vector3r> m_x;
 			std::vector<Vector3r> m_v;
@@ -101,6 +110,7 @@ namespace PBD
 
 		public:
 			FORCE_INLINE ParticleData(void)	:
+				  m_particleStates(),
 				  m_masses(),
 				  m_invMasses(),
 				  m_x0(),
@@ -114,6 +124,7 @@ namespace PBD
 
 			FORCE_INLINE ~ParticleData(void) 
 			{
+				m_particleStates.clear();
 				m_masses.clear();
 				m_invMasses.clear();
 				m_x0.clear();
@@ -126,6 +137,7 @@ namespace PBD
 
 			FORCE_INLINE void addVertex(const Vector3r &vertex)
 			{
+				m_particleStates.push_back(ParticleState::Simulated);
 				m_x0.push_back(vertex);
 				m_x.push_back(vertex);
 				m_oldX.push_back(vertex);
@@ -134,6 +146,21 @@ namespace PBD
 				m_invMasses.push_back(1.0);
 				m_v.push_back(Vector3r(0.0, 0.0, 0.0));
 				m_a.push_back(Vector3r(0.0, 0.0, 0.0));
+			}
+
+			FORCE_INLINE ParticleState &getParticleState(const unsigned int i)
+			{
+				return m_particleStates[i];
+			}
+
+			FORCE_INLINE const ParticleState &getParticleState(const unsigned int i) const
+			{
+				return m_particleStates[i];
+			}
+
+			FORCE_INLINE void setParticleState(const unsigned int i, const ParticleState &ps)
+			{
+				m_particleStates[i] = ps;
 			}
 
 			FORCE_INLINE Vector3r &getPosition(const unsigned int i)
@@ -259,6 +286,7 @@ namespace PBD
 			 */
 			FORCE_INLINE void resize(const unsigned int newSize)
 			{
+				m_particleStates.resize(newSize);
 				m_masses.resize(newSize);
 				m_invMasses.resize(newSize);
 				m_x0.resize(newSize);
@@ -273,6 +301,7 @@ namespace PBD
 			 */
 			FORCE_INLINE void reserve(const unsigned int newSize)
 			{
+				m_particleStates.reserve(newSize);
 				m_masses.reserve(newSize);
 				m_invMasses.reserve(newSize);
 				m_x0.reserve(newSize);
@@ -287,6 +316,7 @@ namespace PBD
 			 */
 			FORCE_INLINE void release()
 			{
+				m_particleStates.clear();
 				m_masses.clear();
 				m_invMasses.clear();
 				m_x0.clear();

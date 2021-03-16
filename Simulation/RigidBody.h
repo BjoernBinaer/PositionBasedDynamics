@@ -2,14 +2,19 @@
 #define __RIGIDBODY_H__
 
 #include <vector>
+#include <map>
 #include "Common/Common.h"
 #include "RigidBodyGeometry.h"
 #include "Utils/VolumeIntegration.h"
 #include "extern/tinyexpr/tinyexpr.h"
 
+#include "Utils/Logger.h"
+
 
 namespace PBD
 {
+	enum class RigidBodyState { Simulated = 0, Animated, Fixed, NumRigidBodyStates };
+
 	struct PrescribedTrajectory
 	{
 		/** start of the prescribed motion */
@@ -110,9 +115,10 @@ namespace PBD
 			Vector3r m_transformation_v1;
 			Vector3r m_transformation_v2;
 			Vector3r m_transformation_R_X_v1;
-			
-			Real m_startTime;
-			Real m_endTime;
+
+			RigidBodyState m_rbState;
+
+			std::vector<PrescribedTrajectory> m_trajectories;
 
 		public:
 			RigidBody(void) 
@@ -189,9 +195,93 @@ namespace PBD
 				getGeometry().updateMeshTransformation(getPosition(), getRotationMatrix());
 			}
 
-			void prescribed_step(Real h)
+			void reclaimBodyFromAnimation() 
 			{
-				
+				if (m_mass != 0.0)
+					setRigidBodyState(RigidBodyState::Simulated);
+				else 
+					setRigidBodyState(RigidBodyState::Fixed);
+			}
+
+			void prescribed_step(Real h, Real delta_h)
+			{
+				// This will only capture the trajectory with the smallest on-time!
+				// The user has to take care of the validity of their inputs.
+				Real current_delta = std::numeric_limits<Real>::max();
+				const PrescribedTrajectory *pres_tj = nullptr;
+
+				for (auto const &trj : m_trajectories) 
+				{
+					if (trj.m_startTime >= h && trj.m_endTime <= h)
+					{
+						Real delta = h - trj.m_startTime;
+						if (delta < current_delta)
+							pres_tj = &trj;
+					}
+				}
+
+				if (pres_tj == nullptr)
+				{
+					reclaimBodyFromAnimation();
+					return;
+				}
+
+				setRigidBodyState(RigidBodyState::Animated);
+
+				const Vector3r& xi = getPosition();
+				const Vector3r& vi = getVelocity();
+
+				te_variable vars[] = {{"t", &h}, {"dt", &delta_h}, 
+									  {"x", &xi[0]}, {"y", &xi[1]}, {"z", &xi[2]},
+									  {"vx", &vi[0]}, {"vy", &vi[1]}, {"vz", &vi[2]}};
+				const int num_vars = 8;
+				int err = -1;
+
+				// Only overrides old positions if needed!
+				Vector3r newPos = getPosition();
+
+				//////////////////////////////////////////////////////////////////////////
+				// pos_x
+				//////////////////////////////////////////////////////////////////////////
+				if (pres_tj->m_prescribedTrajectory[0] != "")
+				{
+					te_expr *expr_posx = te_compile(pres_tj->m_prescribedTrajectory[0].c_str(), vars, num_vars, &err);
+					if (expr_posx)
+						newPos[0] = static_cast<Real>(te_eval(expr_posx));
+
+					if (err != 0)
+						std::cout << "RigidBody: expression for prescribed motion x is wrong." << std::endl;
+				}
+
+				//////////////////////////////////////////////////////////////////////////
+				// pos_y
+				//////////////////////////////////////////////////////////////////////////
+				if (pres_tj->m_prescribedTrajectory[1] != "")
+				{
+					te_expr *expr_posx = te_compile(pres_tj->m_prescribedTrajectory[1].c_str(), vars, num_vars, &err);
+					if (expr_posx)
+						newPos[1] = static_cast<Real>(te_eval(expr_posx));
+
+					if (err != 0)
+						std::cout << "RigidBody: expression for prescribed motion y is wrong." << std::endl;
+				}
+
+				//////////////////////////////////////////////////////////////////////////
+				// pos_z
+				//////////////////////////////////////////////////////////////////////////
+				if (pres_tj->m_prescribedTrajectory[2] != "")
+				{
+					te_expr *expr_posx = te_compile(pres_tj->m_prescribedTrajectory[2].c_str(), vars, num_vars, &err);
+					if (expr_posx)
+						newPos[2] = static_cast<Real>(te_eval(expr_posx));
+
+					if (err != 0)
+						std::cout << "RigidBody: expression for prescribed motion z is wrong." << std::endl;
+				}
+
+				LOG_DEBUG << "Prescribed position: " << newPos;
+
+				setPosition(newPos);
 			}
 
 			void reset()
@@ -329,6 +419,21 @@ namespace PBD
 			FORCE_INLINE const Real &getInvMass() const
 			{
 				return m_invMass;
+			}
+
+			FORCE_INLINE RigidBodyState &getRigidBodyState()
+			{
+				return m_rbState;
+			}
+
+			FORCE_INLINE const RigidBodyState &getRigidBodyState() const
+			{
+				return m_rbState;
+			}
+
+			FORCE_INLINE void setRigidBodyState(const RigidBodyState &rbState) 
+			{
+				m_rbState = rbState;
 			}
 
 			FORCE_INLINE Vector3r &getPosition()

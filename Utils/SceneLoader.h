@@ -78,6 +78,16 @@ namespace Utilities
 			nlohmann::json m_json;
 		};
 
+		struct KinematicsData
+		{
+			unsigned int m_id;
+			Real m_startTime;
+			Real m_endTime;
+			std::string m_translation[3];
+			Vector3r m_rotationAxis;
+			Real m_angularVel;
+		};
+
 		struct BallJointData
 		{
 			unsigned int m_bodyID[2];
@@ -217,6 +227,7 @@ namespace Utilities
 			std::vector<RigidBodyData> m_rigidBodyData;			
 			std::vector<TriangleModelData> m_triangleModelData;
 			std::vector<TetModelData> m_tetModelData;
+			std::vector<KinematicsData> m_kinematicsData;
 			std::vector<BallJointData> m_ballJointData;
 			std::vector<BallOnLineJointData> m_ballOnLineJointData;
 			std::vector<HingeJointData> m_hingeJointData;
@@ -238,6 +249,7 @@ namespace Utilities
 		void readRigidBodies(const nlohmann::json &child, const std::string &key, const std::string &basePath, SceneData &sceneData);
 		void readTriangleModels(const nlohmann::json &child, const std::string &key, const std::string &basePath, SceneData &sceneData);
 		void readTetModels(const nlohmann::json &child, const std::string &key, const std::string &basePath, SceneData &sceneData);
+		void readKinematics(const nlohmann::json &child, const std::string &key, SceneData &sceneData);
 		void readBallJoints(const nlohmann::json &child, const std::string &key, SceneData &sceneData);
 		void readBallOnLineJoints(const nlohmann::json &child, const std::string &key, SceneData &sceneData);
 		void readHingeJoints(const nlohmann::json &child, const std::string &key, SceneData &sceneData);

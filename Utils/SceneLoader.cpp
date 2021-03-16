@@ -79,6 +79,12 @@ void SceneLoader::readScene(const std::string &fileName, SceneData &sceneData)
 			readTetModels(m_json, "TetModels", basePath, sceneData);
 
 		//////////////////////////////////////////////////////////////////////////
+		// read kinematics
+		//////////////////////////////////////////////////////////////////////////
+		if (m_json.find("Kinematics") != m_json.end())
+			readKinematics(m_json, "Kinematics", sceneData);
+
+		//////////////////////////////////////////////////////////////////////////
 		// read ball joints
 		//////////////////////////////////////////////////////////////////////////
 		if (m_json.find("BallJoints") != m_json.end())
@@ -474,6 +480,53 @@ void SceneLoader::readTetModels(const nlohmann::json &j, const std::string &key,
 			readVector(tetModel, "resolutionSDF", data.m_resolutionSDF);
 
 			data.m_json = tetModel;
+		}
+	}
+}
+
+void SceneLoader::readKinematics(const nlohmann::json &j, const std::string &key, SceneData &sceneData)
+{
+	const nlohmann::json &child = j[key];
+
+	for (const auto& kinModel : child)
+	{
+		// id
+		unsigned int model_id = 0;
+		readValue(kinModel, "id", model_id);
+
+		nlohmann::json prescribed_motions = kinModel["prescribedMotions"];
+
+		for (const auto& prescr_mot : prescribed_motions)
+		{
+			sceneData.m_kinematicsData.emplace_back(KinematicsData());
+			KinematicsData &data = sceneData.m_kinematicsData.back();
+			data.m_id = model_id;
+
+			// Start time
+			data.m_startTime = 0.0;
+			readValue(prescr_mot, "startTime", data.m_startTime);
+
+			// End time
+			data.m_endTime = static_cast<Real>(-1.0);
+			readValue(prescr_mot, "endTime", data.m_endTime);
+
+			// Translation expression
+			data.m_translation[0] = "";
+			readValue(prescr_mot, "translation_x", data.m_translation[0]);
+
+			data.m_translation[1] = "";
+			readValue(prescr_mot, "translation_y", data.m_translation[1]);
+
+			data.m_translation[2] = "";
+			readValue(prescr_mot, "translation_z", data.m_translation[2]);
+
+			// Rotation Axis
+			data.m_rotationAxis = Vector3r::UnitX();
+			readVector(prescr_mot, "rotation_axis", data.m_rotationAxis);
+
+			// Angular Velocity
+			data.m_angularVel = static_cast<Real>(0.0);
+			readValue(prescr_mot, "ang_vel", data.m_angularVel);
 		}
 	}
 }

@@ -69,30 +69,65 @@ void TimeStepController::step(SimulationModel &model)
 {
 	START_TIMING("simulation step");
 	TimeManager *tm = TimeManager::getCurrent ();
-	const Real h = tm->getTimeStepSize();
+	const Real dt = tm->getTimeStepSize();
+	const Real t = tm->getTime();
  
 	//////////////////////////////////////////////////////////////////////////
 	// rigid body model
 	//////////////////////////////////////////////////////////////////////////
 	clearAccelerations(model);
 	SimulationModel::RigidBodyVector &rb = model.getRigidBodies();
+	SimulationModel::TetModelVector &tet = model.getTetModels();
 	ParticleData &pd = model.getParticles();
 	OrientationData &od = model.getOrientations();
 
+	const int numBodies = (int)rb.size();
+	const int numTetModels = (int)tet.size();
+
 	// Check if some prescribed motion is provided for the rigid body / particles / orientations
 
-	const int numBodies = (int)rb.size();
+	for (int i = 0; i < numBodies; i++)
+	{
+		if (rb[i]->hasCurrentlyPrescribedMotion(t))
+		{
+			rb[i]->setRigidBodyState(RigidBodyState::Animated);
+			rb[i]->applyCurrentPrescribedMotion(t, dt);
+		}
+		else
+		{
+			rb[i]->setRigidBodyState(RigidBodyState::Simulated);
+		}
+	}
+
+	for (int i = 0; i < (int) tet.size(); i++)
+	{
+		if (tet[i]->hasCurrentlyPrescribedMotion(t))
+		{
+			const unsigned int offset = tet[i]->getIndexOffset();
+			const unsigned int nParticles = tet[i]->getParticleMesh().numVertices();
+
+			for (int j = offset; j < (int) (offset + nParticles); j++)
+			{
+				pd.setParticleState(j, ParticleState::Animated);
+				//tet[i]->m_prescribedMotionVector[0]->getParticleStep()(t, dt, pd, offset, nParticles);
+			}
+		}
+	}
+
 	#pragma omp parallel if(numBodies > MIN_PARALLEL_SIZE) default(shared)
 	{
 		#pragma omp for schedule(static) nowait
 		for (int i = 0; i < numBodies; i++)
 		{ 
+			if (rb[i]->getRigidBodyState() != RigidBodyState::Simulated)
+				continue;
+
 			rb[i]->getLastPosition() = rb[i]->getOldPosition();
 			rb[i]->getOldPosition() = rb[i]->getPosition();
-			TimeIntegration::semiImplicitEuler(h, rb[i]->getMass(), rb[i]->getPosition(), rb[i]->getVelocity(), rb[i]->getAcceleration());
+			TimeIntegration::semiImplicitEuler(dt, rb[i]->getMass(), rb[i]->getPosition(), rb[i]->getVelocity(), rb[i]->getAcceleration());
 			rb[i]->getLastRotation() = rb[i]->getOldRotation();
 			rb[i]->getOldRotation() = rb[i]->getRotation();
-			TimeIntegration::semiImplicitEulerRotation(h, rb[i]->getMass(), rb[i]->getInertiaTensorInverseW(), rb[i]->getRotation(), rb[i]->getAngularVelocity(), rb[i]->getTorque());
+			TimeIntegration::semiImplicitEulerRotation(dt, rb[i]->getMass(), rb[i]->getInertiaTensorInverseW(), rb[i]->getRotation(), rb[i]->getAngularVelocity(), rb[i]->getTorque());
 			rb[i]->rotationUpdated();
 		}
 
@@ -104,7 +139,7 @@ void TimeStepController::step(SimulationModel &model)
 		{
 			pd.getLastPosition(i) = pd.getOldPosition(i);
 			pd.getOldPosition(i) = pd.getPosition(i);
-			TimeIntegration::semiImplicitEuler(h, pd.getMass(i), pd.getPosition(i), pd.getVelocity(i), pd.getAcceleration(i));
+			TimeIntegration::semiImplicitEuler(dt, pd.getMass(i), pd.getPosition(i), pd.getVelocity(i), pd.getAcceleration(i));
 		}
 
 		//////////////////////////////////////////////////////////////////////////
@@ -115,7 +150,7 @@ void TimeStepController::step(SimulationModel &model)
 		{
 			od.getLastQuaternion(i) = od.getOldQuaternion(i);
 			od.getOldQuaternion(i) = od.getQuaternion(i);
-			TimeIntegration::semiImplicitEulerRotation(h, od.getMass(i), od.getInvMass(i) * Matrix3r::Identity() ,od.getQuaternion(i), od.getVelocity(i), Vector3r(0,0,0));
+			TimeIntegration::semiImplicitEulerRotation(dt, od.getMass(i), od.getInvMass(i) * Matrix3r::Identity() ,od.getQuaternion(i), od.getVelocity(i), Vector3r(0,0,0));
 		}
 	}
 
@@ -131,13 +166,13 @@ void TimeStepController::step(SimulationModel &model)
 		{
 			if (m_velocityUpdateMethod == 0)
 			{
-				TimeIntegration::velocityUpdateFirstOrder(h, rb[i]->getMass(), rb[i]->getPosition(), rb[i]->getOldPosition(), rb[i]->getVelocity());
-				TimeIntegration::angularVelocityUpdateFirstOrder(h, rb[i]->getMass(), rb[i]->getRotation(), rb[i]->getOldRotation(), rb[i]->getAngularVelocity());
+				TimeIntegration::velocityUpdateFirstOrder(dt, rb[i]->getMass(), rb[i]->getPosition(), rb[i]->getOldPosition(), rb[i]->getVelocity());
+				TimeIntegration::angularVelocityUpdateFirstOrder(dt, rb[i]->getMass(), rb[i]->getRotation(), rb[i]->getOldRotation(), rb[i]->getAngularVelocity());
 			}
 			else
 			{
-				TimeIntegration::velocityUpdateSecondOrder(h, rb[i]->getMass(), rb[i]->getPosition(), rb[i]->getOldPosition(), rb[i]->getLastPosition(), rb[i]->getVelocity());
-				TimeIntegration::angularVelocityUpdateSecondOrder(h, rb[i]->getMass(), rb[i]->getRotation(), rb[i]->getOldRotation(), rb[i]->getLastRotation(), rb[i]->getAngularVelocity());
+				TimeIntegration::velocityUpdateSecondOrder(dt, rb[i]->getMass(), rb[i]->getPosition(), rb[i]->getOldPosition(), rb[i]->getLastPosition(), rb[i]->getVelocity());
+				TimeIntegration::angularVelocityUpdateSecondOrder(dt, rb[i]->getMass(), rb[i]->getRotation(), rb[i]->getOldRotation(), rb[i]->getLastRotation(), rb[i]->getAngularVelocity());
 			}
 			// update geometry
 			if (rb[i]->getMass() != 0.0)
@@ -149,9 +184,9 @@ void TimeStepController::step(SimulationModel &model)
 		for (int i = 0; i < (int) pd.size(); i++)
 		{
 			if (m_velocityUpdateMethod == 0)
-				TimeIntegration::velocityUpdateFirstOrder(h, pd.getMass(i), pd.getPosition(i), pd.getOldPosition(i), pd.getVelocity(i));
+				TimeIntegration::velocityUpdateFirstOrder(dt, pd.getMass(i), pd.getPosition(i), pd.getOldPosition(i), pd.getVelocity(i));
 			else
-				TimeIntegration::velocityUpdateSecondOrder(h, pd.getMass(i), pd.getPosition(i), pd.getOldPosition(i), pd.getLastPosition(i), pd.getVelocity(i));
+				TimeIntegration::velocityUpdateSecondOrder(dt, pd.getMass(i), pd.getPosition(i), pd.getOldPosition(i), pd.getLastPosition(i), pd.getVelocity(i));
 		}
 
 		// Update velocites of orientations
@@ -159,9 +194,9 @@ void TimeStepController::step(SimulationModel &model)
 		for (int i = 0; i < (int)od.size(); i++)
 		{
 			if (m_velocityUpdateMethod == 0)
-				TimeIntegration::angularVelocityUpdateFirstOrder(h, od.getMass(i), od.getQuaternion(i), od.getOldQuaternion(i), od.getVelocity(i));
+				TimeIntegration::angularVelocityUpdateFirstOrder(dt, od.getMass(i), od.getQuaternion(i), od.getOldQuaternion(i), od.getVelocity(i));
 			else
-				TimeIntegration::angularVelocityUpdateSecondOrder(h, od.getMass(i), od.getQuaternion(i), od.getOldQuaternion(i), od.getLastQuaternion(i), od.getVelocity(i));
+				TimeIntegration::angularVelocityUpdateSecondOrder(dt, od.getMass(i), od.getQuaternion(i), od.getOldQuaternion(i), od.getLastQuaternion(i), od.getVelocity(i));
 		}
 	}
 
@@ -215,7 +250,7 @@ void TimeStepController::step(SimulationModel &model)
 	}
 	
 	// compute new time	
-	tm->setTime (tm->getTime () + h);
+	tm->setTime (tm->getTime () + dt);
 	STOP_TIMING_AVG;
 }
 

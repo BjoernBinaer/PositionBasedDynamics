@@ -19,6 +19,10 @@ TriangleModel::~TriangleModel(void)
 void TriangleModel::cleanupModel()
 {
 	m_particleMesh.release();
+
+	for (int i = 0; i < m_prescribedMotionVector.size(); i++)
+		delete m_prescribedMotionVector[i];
+	m_prescribedMotionVector.clear();
 }
 
 void TriangleModel::updateMeshNormals(const ParticleData &pd)
@@ -50,4 +54,12 @@ void TriangleModel::initMesh(const unsigned int nPoints, const unsigned int nFac
 unsigned int TriangleModel::getIndexOffset() const
 {
 	return m_indexOffset;
+}
+
+void TriangleModel::addPrescribedMotion(Real startTime, Real endTime, std::string traj[3], Real angVel, Vector3r rotAxis)
+{
+	PrescribedMotion* pm = new PrescribedMotion();
+	pm->initPrescribedMotion(startTime, endTime, traj,
+	angVel, rotAxis, Vector3r::Zero());
+	m_prescribedMotionVector.push_back(pm);
 }

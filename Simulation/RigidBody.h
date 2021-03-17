@@ -2,17 +2,16 @@
 #define __RIGIDBODY_H__
 
 #include <vector>
-#include <map>
 #include "Common/Common.h"
 #include "RigidBodyGeometry.h"
+#include "PrescribedMotion.h"
 #include "Utils/VolumeIntegration.h"
-#include "extern/tinyexpr/tinyexpr.h"
-
 #include "Utils/Logger.h"
 
 
 namespace PBD
 {
+	enum class RigidBodyState { Simulated = 0, Animated, NumRigidBodyStates };
 	/** This class encapsulates the state of a rigid body.
 	 */
 	class RigidBody
@@ -77,6 +76,10 @@ namespace PBD
 			Vector3r m_transformation_v2;
 			Vector3r m_transformation_R_X_v1;
 
+			// Prescribed Motion
+			std::vector<PrescribedMotion*> m_prescribedMotionVector;
+			RigidBodyState m_rbState;
+
 		public:
 			RigidBody(void) 
 			{
@@ -84,6 +87,9 @@ namespace PBD
 
 			~RigidBody(void)
 			{
+				for (int i = 0; i < m_prescribedMotionVector.size(); i++)
+					delete m_prescribedMotionVector[i];
+				m_prescribedMotionVector.clear();
 			}
 
 			void initBody(const Real mass, const Vector3r &x, 
@@ -91,6 +97,8 @@ namespace PBD
 				const VertexData &vertices, const Utilities::IndexedFaceMesh &mesh, 
 				const Vector3r &scale = Vector3r(1.0, 1.0, 1.0))
 			{
+				m_rbState = RigidBodyState::Simulated;
+
 				setMass(mass);
 				m_x = x; 
 				m_x0 = x;
@@ -124,6 +132,8 @@ namespace PBD
 			void initBody(const Real density, const Vector3r &x, const Quaternionr &rotation,
 				const VertexData &vertices, const Utilities::IndexedFaceMesh &mesh, const Vector3r &scale = Vector3r(1.0, 1.0, 1.0))
 			{
+				m_rbState = RigidBodyState::Simulated;
+
 				m_mass = 1.0;
 				m_inertiaTensor = Vector3r(1.0, 1.0, 1.0);
 				m_x = x;
@@ -150,6 +160,51 @@ namespace PBD
 				getGeometry().initMesh(vertices.size(), mesh.numFaces(), &vertices.getPosition(0), mesh.getFaces().data(), mesh.getUVIndices(), mesh.getUVs(), scale);
 				determineMassProperties(density);
 				getGeometry().updateMeshTransformation(getPosition(), getRotationMatrix());
+			}
+
+			void addPrescribedMotion(Real startTime, Real endTime,
+				std::string traj[3], Real angVel, Vector3r rotAxis)
+			{
+				PrescribedMotion* pm = new PrescribedMotion();
+				pm->initPrescribedMotion(startTime, endTime, traj,
+					angVel, rotAxis, Vector3r::Zero());
+				m_prescribedMotionVector.push_back(pm);
+			}
+
+			bool hasCurrentlyPrescribedMotion(Real t)
+			{
+				return std::find_if(m_prescribedMotionVector.begin(), m_prescribedMotionVector.end(), 
+									[t] (PrescribedMotion* pm) { return pm->isInTime(t); })
+						!= m_prescribedMotionVector.end();
+			}
+
+			/** Applies only the prescribed motion with the shortest on-time*/
+			void applyCurrentPrescribedMotion(Real t, Real delta_h)
+			{
+				Real delta = std::numeric_limits<Real>::max();
+				std::function<void(Real, Real, RigidBody&)> presMotFn = nullptr;
+
+				for (const auto& pm : m_prescribedMotionVector)
+				{
+					if (pm->isInTime(t))
+					{
+						Real curr_delta = t - pm->getStartTime();
+						if (curr_delta < delta)
+						{
+							delta = curr_delta;
+							presMotFn = pm->getRigidBodyStep();
+						}
+					}
+				}
+
+				try 
+				{
+					presMotFn(t, delta_h, *this);
+				}
+				catch (const std::bad_function_call& e) 
+				{
+					LOG_ERR << e.what();
+				}
 			}
 
 			void reset()
@@ -264,6 +319,21 @@ namespace PBD
 			const Vector3r &getTransformationV1() { return m_transformation_v1; }
 			const Vector3r &getTransformationV2() { return m_transformation_v2; }
 			const Vector3r &getTransformationRXV1() { return m_transformation_R_X_v1; }
+
+			FORCE_INLINE RigidBodyState &getRigidBodyState()
+			{
+				return m_rbState;
+			}
+
+			FORCE_INLINE const RigidBodyState &getRigidBodyState() const 
+			{
+				return m_rbState;
+			}
+
+			FORCE_INLINE void setRigidBodyState(RigidBodyState rbState)
+			{
+				m_rbState = rbState;
+			}
 
 			FORCE_INLINE Real &getMass()
 			{

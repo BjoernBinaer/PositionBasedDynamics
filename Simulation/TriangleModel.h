@@ -7,6 +7,7 @@
 #include "Utils/IndexedFaceMesh.h"
 #include "Simulation/ParticleData.h"
 #include "Constraints.h"
+#include "PrescribedMotion.h"
 
 namespace PBD 
 {	
@@ -26,6 +27,8 @@ namespace PBD
 			Real m_restitutionCoeff;
 			Real m_frictionCoeff;
 
+			std::vector<PrescribedMotion*> m_prescribedMotionVector;
+
 		public:
 			void updateConstraints();
 
@@ -36,6 +39,9 @@ namespace PBD
 
 			void initMesh(const unsigned int nPoints, const unsigned int nFaces, const unsigned int indexOffset, unsigned int* indices, const ParticleMesh::UVIndices& uvIndices, const ParticleMesh::UVs& uvs);
 			void updateMeshNormals(const ParticleData &pd);
+
+			void addPrescribedMotion(Real startTime, Real endTime, std::string traj[3], Real angVel, Vector3r rotAxis);
+			
 
 			FORCE_INLINE Real getRestitutionCoeff() const
 			{

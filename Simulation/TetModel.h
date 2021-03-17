@@ -6,6 +6,7 @@
 #include "Utils/IndexedTetMesh.h"
 #include "Simulation/ParticleData.h"
 #include <vector>
+#include "PrescribedMotion.h"
 
 namespace PBD 
 {	
@@ -49,6 +50,8 @@ namespace PBD
 			Matrix3r m_initialR;
 			Vector3r m_initialScale;
 			
+			std::vector<PrescribedMotion*> m_prescribedMotionVector;
+			
 			void createSurfaceMesh();
  			void solveQuadraticForZero(const Vector3r& F, const Vector3r& Fu, 
  				const Vector3r& Fv, const Vector3r& Fuu,
@@ -71,6 +74,9 @@ namespace PBD
 
 			void initMesh(const unsigned int nPoints, const unsigned int nTets, const unsigned int indexOffset, unsigned int* indices);
 			void updateMeshNormals(const ParticleData &pd);
+
+			void addPrescribedMotion(Real startTime, Real endTime, std::string traj[3], Real angVel, Vector3r rotAxis);
+			bool hasCurrentlyPrescribedMotion(Real t);
 
 			/** Attach a visualization mesh to the surface of the body.
 			 * Important: The vertex normals have to be updated before 

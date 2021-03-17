@@ -710,7 +710,8 @@ void readScene(const bool readFile)
 		if (objFiles.find(rbd.m_modelFile) == objFiles.end())
 			continue;
 
-		id_index[rbd.m_id] = i;
+		const unsigned int rb_id = rbd.m_id;
+		id_index[rb_id] = i;
 
 		VertexData &vd = objFiles[rbd.m_modelFile].first;
 		IndexedFaceMesh &mesh = objFiles[rbd.m_modelFile].second;
@@ -731,6 +732,14 @@ void readScene(const bool readFile)
 		}
 		rb[i]->setRestitutionCoeff(rbd.m_restitutionCoeff);
 		rb[i]->setFrictionCoeff(rbd.m_frictionCoeff);
+
+		for (auto kd : data.m_kinematicsData)
+		{
+			if (kd.m_id == rb_id)
+				rb[i]->addPrescribedMotion(kd.m_startTime, kd.m_endTime,
+					kd.m_translation, kd.m_angularVel,
+					kd.m_rotationAxis);
+		}
 
 		const std::vector<Vector3r> *vertices = rb[i]->getGeometry().getVertexDataLocal().getVertices();
 		const unsigned int nVert = static_cast<unsigned int>(vertices->size());
@@ -803,7 +812,8 @@ void readScene(const bool readFile)
 		if (triFiles.find(tmd.m_modelFile) == triFiles.end())
 			continue;
 
-		tm_id_index[tmd.m_id] = i;
+		const unsigned int tri_id = tmd.m_id;
+		tm_id_index[tri_id] = i;
 
 		VertexData vd = triFiles[tmd.m_modelFile].first;
 		IndexedFaceMesh &mesh = triFiles[tmd.m_modelFile].second;
@@ -828,6 +838,14 @@ void readScene(const bool readFile)
 
 		tm->setRestitutionCoeff(tmd.m_restitutionCoeff);
 		tm->setFrictionCoeff(tmd.m_frictionCoeff);
+
+		for (auto kd : data.m_kinematicsData)
+		{
+			if (kd.m_id == tri_id)
+				tm->addPrescribedMotion(kd.m_startTime, kd.m_endTime,
+					kd.m_translation, kd.m_angularVel,
+					kd.m_rotationAxis);
+		}
 	}
 
 	initTriangleModelConstraints();
@@ -864,7 +882,8 @@ void readScene(const bool readFile)
 		if (geo == tetFiles.end())
 			continue;
 
-		tm_id_index2[tmd.m_id] = i;
+		const unsigned int tet_id = tmd.m_id;
+		tm_id_index2[tet_id] = i;
 
 		vector<Vector3r> vertices = geo->second.first;
 		vector<unsigned int> &tets = geo->second.second;
@@ -914,6 +933,14 @@ void readScene(const bool readFile)
 		tm->setFrictionCoeff(tmd.m_frictionCoeff);
 
 		tm->updateMeshNormals(pd);
+
+		for (auto kd : data.m_kinematicsData)
+		{
+			if (kd.m_id == tet_id)
+				tm->addPrescribedMotion(kd.m_startTime, kd.m_endTime,
+					kd.m_translation, kd.m_angularVel,
+					kd.m_rotationAxis);
+		}
 	}
 
 	initTetModelConstraints();

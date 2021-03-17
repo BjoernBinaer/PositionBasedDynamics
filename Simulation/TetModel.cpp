@@ -24,6 +24,10 @@ TetModel::~TetModel(void)
 void TetModel::cleanupModel()
 {
 	m_particleMesh.release();
+
+	for (int i = 0; i < m_prescribedMotionVector.size(); i++)
+		delete m_prescribedMotionVector[i];
+	m_prescribedMotionVector.clear();
 }
 
 TetModel::ParticleMesh &TetModel::getParticleMesh() 
@@ -91,6 +95,21 @@ void TetModel::updateMeshNormals(const ParticleData &pd)
 {
 	m_surfaceMesh.updateNormals(pd, m_indexOffset);
 	m_surfaceMesh.updateVertexNormals(pd);
+}
+
+void TetModel::addPrescribedMotion(Real startTime, Real endTime, std::string traj[3], Real angVel, Vector3r rotAxis)
+{
+	PrescribedMotion* pm = new PrescribedMotion();
+	pm->initPrescribedMotion(startTime, endTime, traj,
+	angVel, rotAxis, Vector3r::Zero());
+	m_prescribedMotionVector.push_back(pm);
+}
+
+bool TetModel::hasCurrentlyPrescribedMotion(Real t)
+{
+	return std::find_if(m_prescribedMotionVector.begin(), m_prescribedMotionVector.end(), 
+						[t] (PrescribedMotion* pm) { return pm->isInTime(t); })
+			!= m_prescribedMotionVector.end();
 }
 
 void TetModel::attachVisMesh(const ParticleData &pd)

@@ -2,14 +2,15 @@
 #define __PRESCRIBED_MOTION_H__
 
 #include "Common/Common.h"
-#include "RigidBody.h"
-#include "ParticleData.h"
 #include "extern/tinyexpr/tinyexpr.h"
 
 using namespace std::placeholders;
 
 namespace PBD
 {
+    class RigidBody;
+    class ParticleData;
+    
     class PrescribedMotion
     {
         private:
@@ -30,8 +31,8 @@ namespace PBD
             Vector3r m_supportPoint;
 
         protected:
-            void evaluateRigidBodyStep(Real h, Real delta_h, RigidBody& rb);
-            void evaluateParticleStep(Real h, Real delta_h, ParticleData& pd);
+            void evaluateRigidBodyStep(Real t, Real dt, RigidBody& rb);
+            void evaluateParticleStep(Real t, Real dt, ParticleData& pd, unsigned int offset, unsigned int size);
 
             bool evaluateVectorValue(std::string expr[3], te_variable vars[], int num_vars, Vector3r& vec_val);
             bool evaluateRealValue(std::string expr, te_variable vars[], int num_vars, Real &val);
@@ -46,16 +47,28 @@ namespace PBD
                 Vector3r suppPoint
             );
 
+            bool isInTime(Real t);
+
             std::function<void(Real, Real, RigidBody&)> getRigidBodyStep() { 
                 return std::bind(
                     &PrescribedMotion::evaluateRigidBodyStep, this, _1, _2, _3
                 ); 
             };
-            std::function<void(Real, Real, ParticleData&)> getParticleStep() { 
+            std::function<void(Real, Real, ParticleData&, unsigned int, unsigned int)> getParticleStep() { 
                 return std::bind(
-                    &PrescribedMotion::evaluateParticleStep, this, _1, _2, _3
+                    &PrescribedMotion::evaluateParticleStep, this, _1, _2, _3, _4, _5
                 ); 
             };
+
+            FORCE_INLINE const Real getStartTime() const
+            {
+                return m_startTime;
+            }
+
+            FORCE_INLINE const Real getEndTime() const
+            {
+                return m_endTime;
+            }
     };
 }
 

@@ -103,10 +103,10 @@ void PrescribedMotion::rigidBodyStep(Real t, Real dt, RigidBody& rb)
 void PrescribedMotion::particleStep(Real t, Real dt, ParticleData& pd, unsigned int offset, unsigned int size)
 {
     // Move support vector of rotation axis
-    const Vector3r& xi = m_supportPoint;
+    const Vector3r supp_xi = m_supportPoint;
 
     te_variable vars[] = {{"t", &t}, {"dt", &dt}, 
-						  {"x", &xi[0]}, {"y", &xi[1]}, {"z", &xi[2]}};
+						  {"x", &supp_xi[0]}, {"y", &supp_xi[1]}, {"z", &supp_xi[2]}};
     const int num_vars = 5;
     Vector3r newSupportPoint = m_supportPoint;
 
@@ -115,7 +115,7 @@ void PrescribedMotion::particleStep(Real t, Real dt, ParticleData& pd, unsigned 
 
     const Vector3r translation = newSupportPoint - m_supportPoint;
 
-    LOG_DEBUG << "Current Translation: " << translation;
+    //LOG_DEBUG << "Current Translation: " << translation;
 
     m_supportPoint = newSupportPoint;
 
@@ -123,7 +123,8 @@ void PrescribedMotion::particleStep(Real t, Real dt, ParticleData& pd, unsigned 
     for (unsigned int i = offset; i < offset + size; i++)
     {
         // Particles have moved by the translation
-        Vector3r xi = pd.getPosition(i) + translation;
+        const Vector3r& oldPosition = pd.getPosition(i);
+        Vector3r xi = oldPosition + translation;
         
         // Step 1: Compute the normal vector ri of the line intersecting in our point
         Eigen::ParametrizedLine<Real, 3> rotLine(m_supportPoint, m_rotationAxis.normalized());
@@ -136,6 +137,14 @@ void PrescribedMotion::particleStep(Real t, Real dt, ParticleData& pd, unsigned 
 
         // Step 3: Recover tangential component
         xi = proj_xi + ri_new;
-        pd.setPosition(i, xi);
+
+        // Calculate rough velocities:
+        const Vector3r transl_vel = translation / dt;
+        const Vector3r rot_vel = (m_angularVelocity * m_rotationAxis).cross(ri_new);
+        const Vector3r vel = transl_vel + rot_vel;
+        
+        LOG_DEBUG << vel;
+
+        pd.setVelocity(i, vel);
     }
 }

@@ -86,6 +86,10 @@ namespace Utilities
 			std::string m_translation[3];
 			Vector3r m_rotationAxis;
 			Real m_angularVel;
+			bool m_useCustomReferencePoint;
+			bool m_useAvgReferencePoint;
+			Vector3r m_refPoint;
+			Vector3r m_supportVector;
 		};
 
 		struct BallJointData

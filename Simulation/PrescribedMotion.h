@@ -31,9 +31,6 @@ namespace PBD
             Vector3r m_supportPoint;
 
         protected:
-            void evaluateRigidBodyStep(Real t, Real dt, RigidBody& rb);
-            void evaluateParticleStep(Real t, Real dt, ParticleData& pd, unsigned int offset, unsigned int size);
-
             bool evaluateVectorValue(std::string expr[3], te_variable vars[], int num_vars, Vector3r& vec_val);
             bool evaluateRealValue(std::string expr, te_variable vars[], int num_vars, Real &val);
 
@@ -49,16 +46,8 @@ namespace PBD
 
             bool isInTime(Real t);
 
-            std::function<void(Real, Real, RigidBody&)> getRigidBodyStep() { 
-                return std::bind(
-                    &PrescribedMotion::evaluateRigidBodyStep, this, _1, _2, _3
-                ); 
-            };
-            std::function<void(Real, Real, ParticleData&, unsigned int, unsigned int)> getParticleStep() { 
-                return std::bind(
-                    &PrescribedMotion::evaluateParticleStep, this, _1, _2, _3, _4, _5
-                ); 
-            };
+            void rigidBodyStep(Real t, Real dt, RigidBody& rb);
+            void particleStep(Real t, Real dt, ParticleData& pd, unsigned int offset, unsigned int size);
 
             FORCE_INLINE const Real getStartTime() const
             {

@@ -34,53 +34,6 @@ bool PrescribedMotion::isInTime(Real t)
     return (t >= m_startTime && t <= m_endTime);
 }
 
-void PrescribedMotion::evaluateRigidBodyStep(Real t, Real dt, RigidBody& rb)
-{
-    const Vector3r xi = rb.getPosition();
-    const Vector3r vi = rb.getVelocity();
-
-    te_variable vars[] = {{"t", &t}, {"dt", &dt}, 
-						  {"x", &xi[0]}, {"y", &xi[1]}, {"z", &xi[2]},
-						  {"vx", &vi[0]}, {"vy", &vi[1]}, {"vz", &vi[2]}};
-    const int num_vars = 8;
-    int err = -1;
-
-    Vector3r newPos = rb.getPosition();
-
-    if(evaluateVectorValue(m_prescribedTrajectory, vars, num_vars, newPos)) 
-    {
-        rb.getLastPosition() = rb.getOldPosition();
-        rb.setOldPosition(xi);
-        rb.setPosition(newPos);
-
-        rb.getLastRotation() = rb.getOldRotation();
-        rb.getOldRotation() = rb.getRotation();
-
-        rb.setAngularVelocity(m_angularVelocity * m_rotationAxis);
-
-        AngleAxisr rotation = AngleAxisr(m_angularVelocity * dt, m_rotationAxis);
-        Quaternionr curr_rotation = rb.getRotation();
-        curr_rotation *= Quaternionr(rotation);
-        curr_rotation.normalize();
-        rb.setRotation(curr_rotation);
-        rb.rotationUpdated();
-    }
-}
-
-void PrescribedMotion::evaluateParticleStep(Real t, Real dt, ParticleData& pd, unsigned int offset, unsigned int size)
-{
-    /*for (unsigned int i = offset; i < offset + size; i++)
-    {
-        const Vector3r xi = pd.getPosition(i);
-        
-        Eigen::ParametrizedLine<Real, 3> rotLine(m_supportPoint, m_rotationAxis.normalized());
-        const Vector3r proj_xi = rotLine.projection(xi);
-        const Vector3r ri = xi - rotLine.projection(xi);
-
-
-    }*/
-}
-
 bool PrescribedMotion::evaluateVectorValue(std::string expr[3], te_variable vars[], int num_vars, Vector3r& vec_val)
 {
     for (unsigned int i = 0; i < 3; i++)
@@ -111,4 +64,78 @@ bool PrescribedMotion::evaluateRealValue(std::string expr, te_variable vars[], i
     }
 
     return true;
+}
+
+void PrescribedMotion::rigidBodyStep(Real t, Real dt, RigidBody& rb)
+{
+    const Vector3r xi = rb.getPosition();
+
+    te_variable vars[] = {{"t", &t}, {"dt", &dt}, 
+						  {"x", &xi[0]}, {"y", &xi[1]}, {"z", &xi[2]}};
+    const int num_vars = 5;
+
+    Vector3r newPos = rb.getPosition();
+
+    if(!evaluateVectorValue(m_prescribedTrajectory, vars, num_vars, newPos)) 
+        return;
+
+    rb.getLastPosition() = rb.getOldPosition();
+    rb.setOldPosition(xi);
+    rb.setPosition(newPos);
+
+    rb.getLastRotation() = rb.getOldRotation();
+    rb.getOldRotation() = rb.getRotation();
+
+    rb.setAngularVelocity(m_angularVelocity * m_rotationAxis);
+
+    AngleAxisr rotation = AngleAxisr(m_angularVelocity * dt, m_rotationAxis);
+    Quaternionr curr_rotation = rb.getRotation();
+    curr_rotation *= Quaternionr(rotation);
+    curr_rotation.normalize();
+    rb.setRotation(curr_rotation);
+    rb.rotationUpdated();
+
+    //AngleAxisr test_arr(curr_rotation);
+    //LOG_DEBUG << "Current rotation angle: " << m_angularVelocity * dt;
+    //LOG_DEBUG << "Rotated amount: " << test_arr.angle() << ", Axis: " << test_arr.axis();
+}
+
+void PrescribedMotion::particleStep(Real t, Real dt, ParticleData& pd, unsigned int offset, unsigned int size)
+{
+    // Move support vector of rotation axis
+    const Vector3r& xi = m_supportPoint;
+
+    te_variable vars[] = {{"t", &t}, {"dt", &dt}, 
+						  {"x", &xi[0]}, {"y", &xi[1]}, {"z", &xi[2]}};
+    const int num_vars = 5;
+    Vector3r newSupportPoint = m_supportPoint;
+
+    if(!evaluateVectorValue(m_prescribedTrajectory, vars, num_vars, newSupportPoint))
+        return;
+
+    const Vector3r translation = newSupportPoint - m_supportPoint;
+
+    LOG_DEBUG << "Current Translation: " << translation;
+
+    m_supportPoint = newSupportPoint;
+
+    // Move particles along the rotation of the axis
+    for (unsigned int i = offset; i < offset + size; i++)
+    {
+        // Particles have moved by the translation
+        Vector3r xi = pd.getPosition(i) + translation;
+        
+        // Step 1: Compute the normal vector ri of the line intersecting in our point
+        Eigen::ParametrizedLine<Real, 3> rotLine(m_supportPoint, m_rotationAxis.normalized());
+        const Vector3r proj_xi = rotLine.projection(xi);
+        const Vector3r ri = xi - proj_xi;
+
+        // Step 2: Rotate ri around the axis
+        Matrix3r rotation = AngleAxisr(m_angularVelocity * dt, m_rotationAxis).toRotationMatrix();
+        const Vector3r ri_new = rotation * ri;
+
+        // Step 3: Recover tangential component
+        xi = proj_xi + ri_new;
+        pd.setPosition(i, xi);
+    }
 }

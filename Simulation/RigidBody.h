@@ -171,18 +171,25 @@ namespace PBD
 				m_prescribedMotionVector.push_back(pm);
 			}
 
-			bool hasCurrentlyPrescribedMotion(Real t)
+			bool checkForPrescribedMotion(Real t)
 			{
-				return std::find_if(m_prescribedMotionVector.begin(), m_prescribedMotionVector.end(), 
+				bool animated = std::find_if(m_prescribedMotionVector.begin(), m_prescribedMotionVector.end(), 
 									[t] (PrescribedMotion* pm) { return pm->isInTime(t); })
-						!= m_prescribedMotionVector.end();
+									!= m_prescribedMotionVector.end();
+
+				if (animated)
+					m_rbState = RigidBodyState::Animated;
+				else
+					m_rbState = RigidBodyState::Simulated;
+
+				return animated;
 			}
 
 			/** Applies only the prescribed motion with the shortest on-time*/
-			void applyCurrentPrescribedMotion(Real t, Real delta_h)
+			void applyCurrentPrescribedMotion(Real t, Real delta_t)
 			{
 				Real delta = std::numeric_limits<Real>::max();
-				std::function<void(Real, Real, RigidBody&)> presMotFn = nullptr;
+				PrescribedMotion* current_pm = nullptr;
 
 				for (const auto& pm : m_prescribedMotionVector)
 				{
@@ -192,19 +199,13 @@ namespace PBD
 						if (curr_delta < delta)
 						{
 							delta = curr_delta;
-							presMotFn = pm->getRigidBodyStep();
+							current_pm = pm;
 						}
 					}
 				}
 
-				try 
-				{
-					presMotFn(t, delta_h, *this);
-				}
-				catch (const std::bad_function_call& e) 
-				{
-					LOG_ERR << e.what();
-				}
+				if (current_pm)
+					current_pm->rigidBodyStep(t, delta_t, *this);
 			}
 
 			void reset()

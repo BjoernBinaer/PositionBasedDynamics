@@ -97,19 +97,58 @@ void TetModel::updateMeshNormals(const ParticleData &pd)
 	m_surfaceMesh.updateVertexNormals(pd);
 }
 
-void TetModel::addPrescribedMotion(Real startTime, Real endTime, std::string traj[3], Real angVel, Vector3r rotAxis)
+void TetModel::addPrescribedMotion(Real startTime, Real endTime, std::string traj[3], Real angVel, Vector3r rotAxis, Vector3r suppVec)
 {
 	PrescribedMotion* pm = new PrescribedMotion();
-	pm->initPrescribedMotion(startTime, endTime, traj,
-	angVel, rotAxis, Vector3r::Zero());
+	pm->initPrescribedMotion(startTime, endTime, traj, angVel, rotAxis, suppVec);
 	m_prescribedMotionVector.push_back(pm);
 }
 
-bool TetModel::hasCurrentlyPrescribedMotion(Real t)
+bool TetModel::checkForPrescribedMotion(Real t, ParticleData &pd)
 {
-	return std::find_if(m_prescribedMotionVector.begin(), m_prescribedMotionVector.end(), 
-						[t] (PrescribedMotion* pm) { return pm->isInTime(t); })
-			!= m_prescribedMotionVector.end();
+	const unsigned int offset = m_indexOffset;
+	const unsigned int nParticles = m_particleMesh.numVertices();
+
+	bool animated = std::find_if(m_prescribedMotionVector.begin(), m_prescribedMotionVector.end(), 
+									[t] (PrescribedMotion* pm) { return pm->isInTime(t); })
+									!= m_prescribedMotionVector.end();
+
+	// TODO: #pragma omp for
+	for (unsigned int i = offset; i < offset + nParticles; i++)
+	{
+		if (animated)
+			pd.setParticleState(i, ParticleState::Animated);
+		else
+			pd.setParticleState(i, ParticleState::Simulated);
+	}
+
+	return animated;
+}
+
+void TetModel::applyCurrentPrescribedMotion(Real t, Real delta_t, ParticleData& pd)
+{
+	const unsigned int offset = m_indexOffset;
+	const unsigned int nParticles = m_particleMesh.numVertices();
+
+	// Get current 
+	Real delta = std::numeric_limits<Real>::max();
+	PrescribedMotion* current_pm = nullptr;
+
+	for (const auto& pm : m_prescribedMotionVector)
+	{
+		if (pm->isInTime(t))
+		{
+			Real curr_delta = t - pm->getStartTime();
+			if (curr_delta < delta)
+			{
+				delta = curr_delta;
+				current_pm = pm;
+			}
+		}
+	}
+
+	if (current_pm)
+		current_pm->particleStep(t, delta_t, pd, offset, nParticles);
 }
 
 void TetModel::attachVisMesh(const ParticleData &pd)

@@ -527,6 +527,22 @@ void SceneLoader::readKinematics(const nlohmann::json &j, const std::string &key
 			// Angular Velocity
 			data.m_angularVel = static_cast<Real>(0.0);
 			readValue(prescr_mot, "ang_vel", data.m_angularVel);
+
+			// Use custom reference point
+			data.m_useCustomReferencePoint = false;
+			readValue(prescr_mot, "use_custom_reference_point", data.m_useCustomReferencePoint);
+
+			// Use avg reference point
+			data.m_useAvgReferencePoint = false;
+			readValue(prescr_mot, "use_avg_reference_point", data.m_useAvgReferencePoint);
+
+			// Reference Point
+			data.m_refPoint = Vector3r::Zero();
+			readVector(prescr_mot, "ref_point", data.m_refPoint);
+
+			// Support Vector 
+			data.m_supportVector = Vector3r::Zero();
+			readVector(prescr_mot, "support_vec", data.m_supportVector);
 		}
 	}
 }

@@ -842,9 +842,31 @@ void readScene(const bool readFile)
 		for (auto kd : data.m_kinematicsData)
 		{
 			if (kd.m_id == tri_id)
+			{
+				Vector3r supportPoint = tmd.m_x;
+
+				if (kd.m_useAvgReferencePoint)
+				{
+					Vector3r referencePoint = R * (kd.m_refPoint.cwiseProduct(tmd.m_scale));
+
+					if (!kd.m_useCustomReferencePoint)
+					{
+						referencePoint = Vector3r::Zero();
+						const unsigned int nVertices = vd.size();
+
+						for (unsigned int j = 0; j < nVertices; j++)
+							referencePoint += vd.getPosition(j);
+					
+						referencePoint /= nVertices;
+					}
+
+					supportPoint += referencePoint + R * (kd.m_supportVector.cwiseProduct(tmd.m_scale));
+				}
+
 				tm->addPrescribedMotion(kd.m_startTime, kd.m_endTime,
 					kd.m_translation, kd.m_angularVel,
-					kd.m_rotationAxis);
+					kd.m_rotationAxis, supportPoint);
+			}
 		}
 	}
 
@@ -937,9 +959,30 @@ void readScene(const bool readFile)
 		for (auto kd : data.m_kinematicsData)
 		{
 			if (kd.m_id == tet_id)
+			{
+				Vector3r supportPoint = tmd.m_x;
+
+				if (kd.m_useAvgReferencePoint)
+				{
+					Vector3r referencePoint = R * (kd.m_refPoint.cwiseProduct(tmd.m_scale));
+
+					if (!kd.m_useCustomReferencePoint)
+					{
+						referencePoint = Vector3r::Zero();
+
+						for (const Vector3r& vert : vertices)
+							referencePoint += vert;
+					
+						referencePoint /= vertices.size();
+					}
+
+					supportPoint += referencePoint + R * (kd.m_supportVector.cwiseProduct(tmd.m_scale));
+				}
+
 				tm->addPrescribedMotion(kd.m_startTime, kd.m_endTime,
 					kd.m_translation, kd.m_angularVel,
-					kd.m_rotationAxis);
+					kd.m_rotationAxis, supportPoint);
+			}
 		}
 	}
 

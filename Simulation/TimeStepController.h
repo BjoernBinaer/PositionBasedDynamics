@@ -32,6 +32,8 @@ namespace PBD
 		void positionConstraintProjection(SimulationModel &model);
 		void velocityConstraintProjection(SimulationModel &model);
 
+		void handleKinematics(SimulationModel &model);
+
 
 	public:
 		TimeStepController();

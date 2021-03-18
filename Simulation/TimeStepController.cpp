@@ -77,42 +77,13 @@ void TimeStepController::step(SimulationModel &model)
 	//////////////////////////////////////////////////////////////////////////
 	clearAccelerations(model);
 	SimulationModel::RigidBodyVector &rb = model.getRigidBodies();
-	SimulationModel::TetModelVector &tet = model.getTetModels();
 	ParticleData &pd = model.getParticles();
 	OrientationData &od = model.getOrientations();
 
 	const int numBodies = (int)rb.size();
-	const int numTetModels = (int)tet.size();
 
-	// Check if some prescribed motion is provided for the rigid body / particles / orientations
-
-	for (int i = 0; i < numBodies; i++)
-	{
-		if (rb[i]->hasCurrentlyPrescribedMotion(t))
-		{
-			rb[i]->setRigidBodyState(RigidBodyState::Animated);
-			rb[i]->applyCurrentPrescribedMotion(t, dt);
-		}
-		else
-		{
-			rb[i]->setRigidBodyState(RigidBodyState::Simulated);
-		}
-	}
-
-	for (int i = 0; i < (int) tet.size(); i++)
-	{
-		if (tet[i]->hasCurrentlyPrescribedMotion(t))
-		{
-			const unsigned int offset = tet[i]->getIndexOffset();
-			const unsigned int nParticles = tet[i]->getParticleMesh().numVertices();
-
-			for (int j = offset; j < (int) (offset + nParticles); j++)
-			{
-				pd.setParticleState(j, ParticleState::Animated);
-				//tet[i]->m_prescribedMotionVector[0]->getParticleStep()(t, dt, pd, offset, nParticles);
-			}
-		}
-	}
+	// Check if some prescribed motion is provided for the rigid body / particles
+	handleKinematics(model);
 
 	#pragma omp parallel if(numBodies > MIN_PARALLEL_SIZE) default(shared)
 	{
@@ -137,6 +108,9 @@ void TimeStepController::step(SimulationModel &model)
 		#pragma omp for schedule(static) 
 		for (int i = 0; i < (int) pd.size(); i++)
 		{
+			if (pd.getParticleState(i) != ParticleState::Simulated)
+				continue;
+
 			pd.getLastPosition(i) = pd.getOldPosition(i);
 			pd.getOldPosition(i) = pd.getPosition(i);
 			TimeIntegration::semiImplicitEuler(dt, pd.getMass(i), pd.getPosition(i), pd.getVelocity(i), pd.getAcceleration(i));
@@ -183,6 +157,9 @@ void TimeStepController::step(SimulationModel &model)
 		#pragma omp for schedule(static) 
 		for (int i = 0; i < (int) pd.size(); i++)
 		{
+			if (pd.getParticleState(i) != ParticleState::Simulated)
+				continue;
+				
 			if (m_velocityUpdateMethod == 0)
 				TimeIntegration::velocityUpdateFirstOrder(dt, pd.getMass(i), pd.getPosition(i), pd.getOldPosition(i), pd.getVelocity(i));
 			else
@@ -370,4 +347,35 @@ void TimeStepController::velocityConstraintProjection(SimulationModel &model)
 	}
 }
 
+void TimeStepController::handleKinematics(SimulationModel &model)
+{
+	TimeManager *tm = TimeManager::getCurrent ();
+	const Real dt = tm->getTimeStepSize();
+	const Real t = tm->getTime();
 
+	SimulationModel::RigidBodyVector &rb = model.getRigidBodies();
+	ParticleData &pd = model.getParticles();
+	SimulationModel::TetModelVector &tet = model.getTetModels();
+	SimulationModel::TriangleModelVector &tri = model.getTriangleModels();
+
+	const int numTetModels = (int)tet.size();
+	const int numBodies = (int)rb.size();
+
+	for (int i = 0; i < numBodies; i++)
+	{
+		if (rb[i]->checkForPrescribedMotion(t))
+			rb[i]->applyCurrentPrescribedMotion(t, dt);
+	}
+
+	for (int i = 0; i < (int) tet.size(); i++)
+	{
+		if (tet[i]->checkForPrescribedMotion(t, pd))
+			tet[i]->applyCurrentPrescribedMotion(t, dt, pd);
+	}
+
+	for (int i = 0; i < (int) tri.size(); i++)
+	{
+		if (tri[i]->checkForPrescribedMotion(t, pd))
+			tri[i]->applyCurrentPrescribedMotion(t, dt, pd);
+	}
+}

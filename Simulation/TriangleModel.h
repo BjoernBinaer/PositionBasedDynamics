@@ -40,10 +40,10 @@ namespace PBD
 			void initMesh(const unsigned int nPoints, const unsigned int nFaces, const unsigned int indexOffset, unsigned int* indices, const ParticleMesh::UVIndices& uvIndices, const ParticleMesh::UVs& uvs);
 			void updateMeshNormals(const ParticleData &pd);
 
-			void addPrescribedMotion(Real startTime, Real endTime, std::string traj[3], Real angVel, Vector3r rotAxis, Vector3r suppVec);
-			bool checkForPrescribedMotion(Real t, ParticleData &pd);
+			void addPrescribedMotion(const Real startTime, const Real endTime, const std::string traj[3], const Real angVel, const Vector3r& rotAxis, const Vector3r& suppVec);
+			bool checkForPrescribedMotion(const Real t, ParticleData &pd);
 
-			void applyCurrentPrescribedMotion(Real t, Real delta_t, ParticleData& pd);
+			void applyCurrentPrescribedMotion(const Real t, const Real delta_t, ParticleData& pd);
 
 			FORCE_INLINE Real getRestitutionCoeff() const
 			{

@@ -149,7 +149,7 @@ void TimeStepController::step(SimulationModel &model)
 				TimeIntegration::angularVelocityUpdateSecondOrder(dt, rb[i]->getMass(), rb[i]->getRotation(), rb[i]->getOldRotation(), rb[i]->getLastRotation(), rb[i]->getAngularVelocity());
 			}
 			// update geometry
-			if (rb[i]->getMass() != 0.0)
+			if (rb[i]->getRigidBodyState() != RigidBodyState::Fixed)
 				rb[i]->getGeometry().updateMeshTransformation(rb[i]->getPosition(), rb[i]->getRotationMatrix());
 		}
 

@@ -733,7 +733,7 @@ void readScene(const bool readFile)
 		rb[i]->setRestitutionCoeff(rbd.m_restitutionCoeff);
 		rb[i]->setFrictionCoeff(rbd.m_frictionCoeff);
 
-		for (auto kd : data.m_kinematicsData)
+		for (const auto& kd : data.m_kinematicsData)
 		{
 			if (kd.m_id == rb_id)
 				rb[i]->addPrescribedMotion(kd.m_startTime, kd.m_endTime,
@@ -839,7 +839,7 @@ void readScene(const bool readFile)
 		tm->setRestitutionCoeff(tmd.m_restitutionCoeff);
 		tm->setFrictionCoeff(tmd.m_frictionCoeff);
 
-		for (auto kd : data.m_kinematicsData)
+		for (const auto& kd : data.m_kinematicsData)
 		{
 			if (kd.m_id == tri_id)
 			{
@@ -956,7 +956,7 @@ void readScene(const bool readFile)
 
 		tm->updateMeshNormals(pd);
 
-		for (auto kd : data.m_kinematicsData)
+		for (const auto& kd : data.m_kinematicsData)
 		{
 			if (kd.m_id == tet_id)
 			{

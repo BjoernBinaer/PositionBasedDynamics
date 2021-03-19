@@ -56,14 +56,14 @@ unsigned int TriangleModel::getIndexOffset() const
 	return m_indexOffset;
 }
 
-void TriangleModel::addPrescribedMotion(Real startTime, Real endTime, std::string traj[3], Real angVel, Vector3r rotAxis, Vector3r suppVec)
+void TriangleModel::addPrescribedMotion(const Real startTime, const Real endTime, const std::string traj[3], const Real angVel, const Vector3r& rotAxis, const Vector3r& suppVec)
 {
 	PrescribedMotion* pm = new PrescribedMotion();
 	pm->initPrescribedMotion(startTime, endTime, traj, angVel, rotAxis, suppVec);
 	m_prescribedMotionVector.push_back(pm);
 }
 
-bool TriangleModel::checkForPrescribedMotion(Real t, ParticleData &pd)
+bool TriangleModel::checkForPrescribedMotion(const Real t, ParticleData &pd)
 {
 	const unsigned int offset = m_indexOffset;
 	const unsigned int nParticles = m_particleMesh.numVertices();
@@ -77,14 +77,16 @@ bool TriangleModel::checkForPrescribedMotion(Real t, ParticleData &pd)
 	{
 		if (animated)
 			pd.setParticleState(i, ParticleState::Animated);
-		else
+		else if (pd.getMass(i) != 0.0)
 			pd.setParticleState(i, ParticleState::Simulated);
+		else 
+			pd.setParticleState(i, ParticleState::Fixed);
 	}
 
 	return animated;
 }
 
-void TriangleModel::applyCurrentPrescribedMotion(Real t, Real delta_t, ParticleData& pd)
+void TriangleModel::applyCurrentPrescribedMotion(const Real t, const Real delta_t, ParticleData& pd)
 {
 	const unsigned int offset = m_indexOffset;
 	const unsigned int nParticles = m_particleMesh.numVertices();

@@ -168,7 +168,11 @@ void SimulationModel::reset()
 	// particles
 	for (unsigned int i = 0; i < m_particles.size(); i++)
 	{
-		m_particles.setParticleState(i, ParticleState::Simulated);
+		if (m_particles.getMass(i) != 0.0)
+			m_particles.setParticleState(i, ParticleState::Simulated);
+		else
+			m_particles.setParticleState(i, ParticleState::Fixed);
+
 		const Vector3r& x0 = m_particles.getPosition0(i);
 		m_particles.getPosition(i) = x0;
 		m_particles.getLastPosition(i) = m_particles.getPosition(i);

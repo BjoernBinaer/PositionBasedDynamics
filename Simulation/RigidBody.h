@@ -11,7 +11,7 @@
 
 namespace PBD
 {
-	enum class RigidBodyState { Simulated = 0, Animated, NumRigidBodyStates };
+	enum class RigidBodyState { Simulated = 0, Fixed, Animated, NumRigidBodyStates };
 	/** This class encapsulates the state of a rigid body.
 	 */
 	class RigidBody
@@ -97,7 +97,10 @@ namespace PBD
 				const VertexData &vertices, const Utilities::IndexedFaceMesh &mesh, 
 				const Vector3r &scale = Vector3r(1.0, 1.0, 1.0))
 			{
-				m_rbState = RigidBodyState::Simulated;
+				if (mass != 0.0)
+					setRigidBodyState(RigidBodyState::Simulated);
+				else 
+					setRigidBodyState(RigidBodyState::Fixed);
 
 				setMass(mass);
 				m_x = x; 
@@ -162,8 +165,8 @@ namespace PBD
 				getGeometry().updateMeshTransformation(getPosition(), getRotationMatrix());
 			}
 
-			void addPrescribedMotion(Real startTime, Real endTime,
-				std::string traj[3], Real angVel, Vector3r rotAxis)
+			void addPrescribedMotion(const Real startTime, const Real endTime,
+				const std::string traj[3], const Real angVel, const Vector3r& rotAxis)
 			{
 				PrescribedMotion* pm = new PrescribedMotion();
 				pm->initPrescribedMotion(startTime, endTime, traj,
@@ -171,7 +174,7 @@ namespace PBD
 				m_prescribedMotionVector.push_back(pm);
 			}
 
-			bool checkForPrescribedMotion(Real t)
+			bool checkForPrescribedMotion(const Real t)
 			{
 				bool animated = std::find_if(m_prescribedMotionVector.begin(), m_prescribedMotionVector.end(), 
 									[t] (PrescribedMotion* pm) { return pm->isInTime(t); })
@@ -179,14 +182,16 @@ namespace PBD
 
 				if (animated)
 					m_rbState = RigidBodyState::Animated;
-				else
+				else if (m_mass != 0.0)
 					m_rbState = RigidBodyState::Simulated;
+				else
+					m_rbState = RigidBodyState::Fixed;
 
 				return animated;
 			}
 
 			/** Applies only the prescribed motion with the shortest on-time*/
-			void applyCurrentPrescribedMotion(Real t, Real delta_t)
+			void applyCurrentPrescribedMotion(const Real t, const Real delta_t)
 			{
 				Real delta = std::numeric_limits<Real>::max();
 				PrescribedMotion* current_pm = nullptr;
@@ -247,7 +252,7 @@ namespace PBD
 
 			void rotationUpdated()
 			{
-				if (m_mass != 0.0)
+				if (m_rbState != RigidBodyState::Fixed)
 				{
 					m_rot = m_q.matrix();
 					updateInverseInertiaW();
@@ -257,7 +262,7 @@ namespace PBD
 
 			void updateInverseInertiaW()
 			{
-				if (m_mass != 0.0)
+				if (m_rbState != RigidBodyState::Fixed)
 				{
 					m_inertiaTensorInverseW = m_rot * m_inertiaTensorInverse.asDiagonal() * m_rot.transpose();
 				}
@@ -350,9 +355,19 @@ namespace PBD
 			{
 				m_mass = value;
 				if (m_mass != 0.0)
+				{
 					m_invMass = static_cast<Real>(1.0) / m_mass;
+
+					if (getRigidBodyState() != RigidBodyState::Animated)
+						setRigidBodyState(RigidBodyState::Simulated);
+				}
 				else
+				{
 					m_invMass = 0.0;
+
+					if (getRigidBodyState() != RigidBodyState::Animated)
+						setRigidBodyState(RigidBodyState::Fixed);
+				}
 			}
 
 			FORCE_INLINE const Real &getInvMass() const

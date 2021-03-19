@@ -14,9 +14,9 @@ PrescribedMotion::~PrescribedMotion()
 }
 
 void PrescribedMotion::initPrescribedMotion(
-    Real startTime, Real endTime, std::string traj[3],
-    Real angVel, Vector3r rotAxis, 
-    Vector3r suppPoint)
+    const Real startTime, const Real endTime, const std::string traj[3],
+    const Real angVel, const Vector3r& rotAxis, 
+    const Vector3r& suppPoint)
 {
     m_startTime = startTime;
     m_endTime = endTime;
@@ -29,12 +29,12 @@ void PrescribedMotion::initPrescribedMotion(
     m_supportPoint = suppPoint;
 }
 
-bool PrescribedMotion::isInTime(Real t)
+bool PrescribedMotion::isInTime(const Real t)
 {
     return (t >= m_startTime && t <= m_endTime);
 }
 
-bool PrescribedMotion::evaluateVectorValue(std::string expr[3], te_variable vars[], int num_vars, Vector3r& vec_val)
+bool PrescribedMotion::evaluateVectorValue(const std::string expr[3], const te_variable vars[], const int num_vars, Vector3r& vec_val)
 {
     for (unsigned int i = 0; i < 3; i++)
     {
@@ -45,7 +45,7 @@ bool PrescribedMotion::evaluateVectorValue(std::string expr[3], te_variable vars
     return true;
 }
 
-bool PrescribedMotion::evaluateRealValue(std::string expr, te_variable vars[], int num_vars, Real& val)
+bool PrescribedMotion::evaluateRealValue(const std::string expr, const te_variable vars[], const int num_vars, Real& val)
 {
     if (expr == "")
         return true;
@@ -66,7 +66,7 @@ bool PrescribedMotion::evaluateRealValue(std::string expr, te_variable vars[], i
     return true;
 }
 
-void PrescribedMotion::rigidBodyStep(Real t, Real dt, RigidBody& rb)
+void PrescribedMotion::rigidBodyStep(const Real t, const Real dt, RigidBody& rb)
 {
     const Vector3r xi = rb.getPosition();
 
@@ -100,7 +100,7 @@ void PrescribedMotion::rigidBodyStep(Real t, Real dt, RigidBody& rb)
     //LOG_DEBUG << "Rotated amount: " << test_arr.angle() << ", Axis: " << test_arr.axis();
 }
 
-void PrescribedMotion::particleStep(Real t, Real dt, ParticleData& pd, unsigned int offset, unsigned int size)
+void PrescribedMotion::particleStep(const Real t, const Real dt, ParticleData& pd, const unsigned int offset, const unsigned int size)
 {
     // Move support vector of rotation axis
     const Vector3r supp_xi = m_supportPoint;

@@ -31,23 +31,23 @@ namespace PBD
             Vector3r m_supportPoint;
 
         protected:
-            bool evaluateVectorValue(std::string expr[3], te_variable vars[], int num_vars, Vector3r& vec_val);
-            bool evaluateRealValue(std::string expr, te_variable vars[], int num_vars, Real &val);
+            bool evaluateVectorValue(const std::string expr[3], const te_variable vars[], const int num_vars, Vector3r& vec_val);
+            bool evaluateRealValue(const std::string expr, const te_variable vars[], const int num_vars, Real &val);
 
         public:
             PrescribedMotion();
             ~PrescribedMotion();
 
             void initPrescribedMotion(
-                Real startTime, Real endTime, std::string traj[3],
-                Real angVel, Vector3r rotAxis, 
-                Vector3r suppPoint
+                const Real startTime, const Real endTime, const std::string traj[3],
+                const Real angVel, const Vector3r& rotAxis, 
+                const Vector3r& suppPoint
             );
 
-            bool isInTime(Real t);
+            bool isInTime(const Real t);
 
-            void rigidBodyStep(Real t, Real dt, RigidBody& rb);
-            void particleStep(Real t, Real dt, ParticleData& pd, unsigned int offset, unsigned int size);
+            void rigidBodyStep(const Real t, const Real dt, RigidBody& rb);
+            void particleStep(const Real t, const Real dt, ParticleData& pd, const unsigned int offset, const unsigned int size);
 
             FORCE_INLINE const Real getStartTime() const
             {

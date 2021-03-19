@@ -11,7 +11,7 @@ namespace PBD
 	* inside the simulation, i.e. whether it is animated,
 	* simulated, fixed or any other possible state.
 	*/
-	enum class ParticleState { Simulated = 0, Animated, NumParticleStates };
+	enum class ParticleState { Simulated = 0, Fixed, Animated, NumParticleStates };
 
 	/** This class encapsulates the state of all vertices.
 	* All parameters are stored in individual arrays.
@@ -267,9 +267,19 @@ namespace PBD
 			{
 				m_masses[i] = mass;
 				if (mass != 0.0)
+				{
 					m_invMasses[i] = static_cast<Real>(1.0) / mass;
-				else
+
+					if (getParticleState(i) != ParticleState::Animated)
+						setParticleState(i, ParticleState::Simulated);
+				}
+				else 
+				{
 					m_invMasses[i] = 0.0;
+					
+					if (getParticleState(i) != ParticleState::Animated)
+						setParticleState(i, ParticleState::Fixed);
+				}
 			}
 
 			FORCE_INLINE const Real getInvMass(const unsigned int i) const

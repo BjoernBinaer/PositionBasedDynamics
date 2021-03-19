@@ -292,6 +292,7 @@ void DemoBase::render()
 	float selectionColor[4] = { 0.8f, 0.0f, 0.0f, 1 };
 	float surfaceColor[4] = { 0.3f, 0.5f, 0.8f, 1 };
 	float staticColor[4] = { 0.5f, 0.5f, 0.5f, 1 };
+	float animatedColor[4] = { 0.3f, 0.5f, 0.8f, 0.2f };
 
 	if (m_renderContacts)
 	{
@@ -317,10 +318,15 @@ void DemoBase::render()
 		const IndexedFaceMesh &mesh = rb[i]->getGeometry().getMesh();
 		if (!selected)
 		{
-			if (rb[i]->getMass() == 0.0)
+			if (rb[i]->getRigidBodyState() == RigidBodyState::Fixed)
 			{
 				glUniform3fv(m_shader.getUniform("surface_color"), 1, staticColor);
 				Visualization::drawMesh(vd, mesh, 0, staticColor);
+			}
+			else if (rb[i]->getRigidBodyState() == RigidBodyState::Animated)
+			{
+				glUniform3fv(m_shader.getUniform("surface_color"), 1, animatedColor);
+				Visualization::drawMesh(vd, mesh, 0, animatedColor);
 			}
 			else
 			{

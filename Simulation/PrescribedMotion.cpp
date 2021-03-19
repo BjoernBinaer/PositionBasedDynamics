@@ -137,6 +137,7 @@ void PrescribedMotion::particleStep(Real t, Real dt, ParticleData& pd, unsigned 
 
         // Step 3: Recover tangential component
         xi = proj_xi + ri_new;
+        pd.setPosition(i, xi);
 
         // Calculate rough velocities:
         const Vector3r transl_vel = translation / dt;

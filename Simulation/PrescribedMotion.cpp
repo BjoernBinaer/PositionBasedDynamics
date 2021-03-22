@@ -69,9 +69,12 @@ bool PrescribedMotion::evaluateRealValue(const std::string expr, const te_variab
 void PrescribedMotion::rigidBodyStep(const Real t, const Real dt, RigidBody& rb)
 {
     const Vector3r xi = rb.getPosition();
+    const Eigen::Vector3d xi_double = xi.cast<double>();
+    const double t_double = static_cast<double>(t);
+    const double dt_double = static_cast<double>(dt);
 
-    te_variable vars[] = {{"t", &t}, {"dt", &dt}, 
-						  {"x", &xi[0]}, {"y", &xi[1]}, {"z", &xi[2]}};
+    te_variable vars[] = {{"t", &t_double}, {"dt", &dt_double}, 
+						  {"x", &xi_double[0]}, {"y", &xi_double[1]}, {"z", &xi_double[2]}};
     const int num_vars = 5;
 
     Vector3r newPos = rb.getPosition();
@@ -104,9 +107,12 @@ void PrescribedMotion::particleStep(const Real t, const Real dt, ParticleData& p
 {
     // Move support vector of rotation axis
     const Vector3r supp_xi = m_supportPoint;
+    const Eigen::Vector3d supp_xi_double = supp_xi.cast<double>();
+    const double t_double = static_cast<double>(t);
+    const double dt_double = static_cast<double>(dt);
 
-    te_variable vars[] = {{"t", &t}, {"dt", &dt}, 
-						  {"x", &supp_xi[0]}, {"y", &supp_xi[1]}, {"z", &supp_xi[2]}};
+    te_variable vars[] = {{"t", &t_double}, {"dt", &dt_double}, 
+						  {"x", &supp_xi_double[0]}, {"y", &supp_xi_double[1]}, {"z", &supp_xi_double[2]}};
     const int num_vars = 5;
     Vector3r newSupportPoint = m_supportPoint;
 

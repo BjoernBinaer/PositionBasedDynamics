@@ -100,6 +100,11 @@ void DistanceFieldCollisionDetection::collisionDetection(SimulationModel &model)
 			{
 				RigidBody *rb1 = rigidBodies[co1->m_bodyIndex];				
 				RigidBody *rb2 = rigidBodies[co2->m_bodyIndex];
+
+				if (rb1->getRigidBodyState() == RigidBodyState::Animated || 
+				    rb2->getRigidBodyState() == RigidBodyState::Animated)
+					continue;
+
 				const Real restitutionCoeff = rb1->getRestitutionCoeff() * rb2->getRestitutionCoeff();
 				const Real frictionCoeff = rb1->getFrictionCoeff() + rb2->getFrictionCoeff();
 				collisionDetectionRigidBodies(rb1, (DistanceFieldCollisionObject*)co1, rb2, (DistanceFieldCollisionObject*)co2,
@@ -116,6 +121,11 @@ void DistanceFieldCollisionDetection::collisionDetection(SimulationModel &model)
 				const unsigned int offset = tm->getIndexOffset();
 				const IndexedFaceMesh &mesh = tm->getParticleMesh();
 				const unsigned int numVert = mesh.numVertices();
+
+				if (rb2->getRigidBodyState() == RigidBodyState::Animated ||
+				 	pd.getParticleState(offset) == ParticleState::Animated)
+					continue;
+
 				const Real restitutionCoeff = tm->getRestitutionCoeff() * rb2->getRestitutionCoeff();
 				const Real frictionCoeff = tm->getFrictionCoeff() + rb2->getFrictionCoeff();
 				collisionDetectionRBSolid(pd, offset, numVert, (DistanceFieldCollisionObject*)co1, rb2, (DistanceFieldCollisionObject*)co2,
@@ -132,6 +142,11 @@ void DistanceFieldCollisionDetection::collisionDetection(SimulationModel &model)
 				const unsigned int offset = tm->getIndexOffset();
 				const IndexedTetMesh &mesh = tm->getParticleMesh();
 				const unsigned int numVert = mesh.numVertices();
+
+				if (rb2->getRigidBodyState() == RigidBodyState::Animated ||
+					pd.getParticleState(offset) == ParticleState::Animated)
+					continue;
+
 				const Real restitutionCoeff = tm->getRestitutionCoeff() * rb2->getRestitutionCoeff();
 				const Real frictionCoeff = tm->getFrictionCoeff() + rb2->getFrictionCoeff();
 				collisionDetectionRBSolid(pd, offset, numVert, (DistanceFieldCollisionObject*)co1, rb2, (DistanceFieldCollisionObject*)co2,
@@ -145,12 +160,18 @@ void DistanceFieldCollisionDetection::collisionDetection(SimulationModel &model)
  			{
  				TetModel *tm1 = tetModels[co1->m_bodyIndex];
  				TetModel *tm2 = tetModels[co2->m_bodyIndex];
- 				const unsigned int offset = tm1->getIndexOffset();
+ 				const unsigned int offset1 = tm1->getIndexOffset();
+				const unsigned int offset2 = tm2->getIndexOffset();
  				const IndexedTetMesh &mesh = tm1->getParticleMesh();
  				const unsigned int numVert = mesh.numVertices();
+
+				if (pd.getParticleState(offset1) == ParticleState::Animated ||
+					pd.getParticleState(offset2) == ParticleState::Animated)
+					continue;
+
  				const Real restitutionCoeff = tm1->getRestitutionCoeff() * tm2->getRestitutionCoeff();
  				const Real frictionCoeff = tm1->getFrictionCoeff() + tm2->getFrictionCoeff();
- 				collisionDetectionSolidSolid(pd, offset, numVert, (DistanceFieldCollisionObject*)co1, tm2, (DistanceFieldCollisionObject*)co2,
+ 				collisionDetectionSolidSolid(pd, offset1, numVert, (DistanceFieldCollisionObject*)co1, tm2, (DistanceFieldCollisionObject*)co2,
  					restitutionCoeff, frictionCoeff
  					, contacts_mt
  				);

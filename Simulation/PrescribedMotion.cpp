@@ -25,7 +25,7 @@ void PrescribedMotion::initPrescribedMotion(
         m_prescribedTrajectory[i] = traj[i];
 
     m_angularVelocity = angVel;
-    m_rotationAxis = rotAxis;
+    m_rotationAxis = rotAxis.normalized();
     m_supportPoint = suppPoint;
 }
 
@@ -120,32 +120,36 @@ void PrescribedMotion::particleStep(const Real t, const Real dt, ParticleData& p
     m_supportPoint = newSupportPoint;
 
     // Move particles along the rotation of the axis
-    for (unsigned int i = offset; i < offset + size; i++)
-    {
-        // Particles have moved by the translation
-        const Vector3r& oldPosition = pd.getPosition(i);
-        Vector3r xi = oldPosition + translation;
+    #pragma omp parallel if(size > MIN_PARALLEL_SIZE) default(shared)
+	{
+        #pragma omp for schedule(static) 
+        for (unsigned int i = offset; i < offset + size; i++)
+        {
+            // Particles have moved by the translation
+            const Vector3r& oldPosition = pd.getPosition(i);
+            Vector3r xi = oldPosition + translation;
         
-        // Step 1: Compute the normal vector ri of the line intersecting in our point
-        Eigen::ParametrizedLine<Real, 3> rotLine(m_supportPoint, m_rotationAxis.normalized());
-        const Vector3r proj_xi = rotLine.projection(xi);
-        const Vector3r ri = xi - proj_xi;
+            // Step 1: Compute the normal vector ri of the line intersecting in our point
+            Eigen::ParametrizedLine<Real, 3> rotLine(m_supportPoint, m_rotationAxis);
+            const Vector3r proj_xi = rotLine.projection(xi);
+            const Vector3r ri = xi - proj_xi;
 
-        // Step 2: Rotate ri around the axis
-        Matrix3r rotation = AngleAxisr(m_angularVelocity * dt, m_rotationAxis).toRotationMatrix();
-        const Vector3r ri_new = rotation * ri;
+            // Step 2: Rotate ri around the axis
+            Matrix3r rotation = AngleAxisr(m_angularVelocity * dt, m_rotationAxis).toRotationMatrix();
+            const Vector3r ri_new = rotation * ri;
 
-        // Step 3: Recover tangential component
-        xi = proj_xi + ri_new;
-        pd.setPosition(i, xi);
+            // Step 3: Recover tangential component
+            xi = proj_xi + ri_new;
+            pd.setPosition(i, xi);
 
-        // Calculate rough velocities:
-        const Vector3r transl_vel = translation / dt;
-        const Vector3r rot_vel = (m_angularVelocity * m_rotationAxis).cross(ri_new);
-        const Vector3r vel = transl_vel + rot_vel;
+            // Calculate rough velocities:
+            const Vector3r transl_vel = translation / dt;
+            const Vector3r rot_vel = (m_angularVelocity * m_rotationAxis).cross(ri_new);
+            const Vector3r vel = transl_vel + rot_vel;
         
-        LOG_DEBUG << vel;
+            //LOG_DEBUG << vel;
 
-        pd.setVelocity(i, vel);
+            pd.setVelocity(i, vel);
+        }
     }
 }

@@ -23,7 +23,7 @@ namespace PBD
             std::string m_prescribedTrajectory[3];
             /** angular velocity of prescribed rotation */
             Real m_angularVelocity;
-            /** rotation axis */
+            /** rotation axis (normalized) */
             Vector3r m_rotationAxis;
             /** support vector for the rotation axis. Note that
              * this is only needed for entities without a local

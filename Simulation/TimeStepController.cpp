@@ -83,7 +83,9 @@ void TimeStepController::step(SimulationModel &model)
 	const int numBodies = (int)rb.size();
 
 	// Check if some prescribed motion is provided for the rigid body / particles
+	START_TIMING("kinematics");
 	handleKinematics(model);
+	STOP_TIMING_AVG;
 
 	#pragma omp parallel if(numBodies > MIN_PARALLEL_SIZE) default(shared)
 	{
@@ -361,10 +363,14 @@ void TimeStepController::handleKinematics(SimulationModel &model)
 	const int numTetModels = (int)tet.size();
 	const int numBodies = (int)rb.size();
 
-	for (int i = 0; i < numBodies; i++)
+	#pragma omp parallel if(numBodies > MIN_PARALLEL_SIZE) default(shared)
 	{
-		if (rb[i]->checkForPrescribedMotion(t))
-			rb[i]->applyCurrentPrescribedMotion(t, dt);
+		#pragma omp for schedule(static) nowait
+		for (int i = 0; i < numBodies; i++)
+		{
+			if (rb[i]->checkForPrescribedMotion(t))
+				rb[i]->applyCurrentPrescribedMotion(t, dt);
+		}
 	}
 
 	for (int i = 0; i < (int) tet.size(); i++)

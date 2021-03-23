@@ -97,10 +97,6 @@ void PrescribedMotion::rigidBodyStep(const Real t, const Real dt, RigidBody& rb)
     curr_rotation.normalize();
     rb.setRotation(curr_rotation);
     rb.rotationUpdated();
-
-    //AngleAxisr test_arr(curr_rotation);
-    //LOG_DEBUG << "Current rotation angle: " << m_angularVelocity * dt;
-    //LOG_DEBUG << "Rotated amount: " << test_arr.angle() << ", Axis: " << test_arr.axis();
 }
 
 void PrescribedMotion::particleStep(const Real t, const Real dt, ParticleData& pd, const unsigned int offset, const unsigned int size)
@@ -120,9 +116,6 @@ void PrescribedMotion::particleStep(const Real t, const Real dt, ParticleData& p
         return;
 
     const Vector3r translation = newSupportPoint - m_supportPoint;
-
-    //LOG_DEBUG << "Current Translation: " << translation;
-
     m_supportPoint = newSupportPoint;
 
     // Move particles along the rotation of the axis
@@ -152,8 +145,6 @@ void PrescribedMotion::particleStep(const Real t, const Real dt, ParticleData& p
             const Vector3r transl_vel = translation / dt;
             const Vector3r rot_vel = (m_angularVelocity * m_rotationAxis).cross(ri_new);
             const Vector3r vel = transl_vel + rot_vel;
-        
-            //LOG_DEBUG << vel;
 
             pd.setVelocity(i, vel);
         }

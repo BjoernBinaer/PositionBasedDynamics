@@ -1,0 +1,394 @@
+{
+	"Name": "PrescribedArmadilloMotionScene",
+	"Simulation": 
+	{
+		"timeStepSize": 0.005,
+		"maxIter" : 5,
+		"maxIterVel" : 5,
+		"velocityUpdateMethod" : 0,
+		"contactTolerance": 0.0,
+		"tetModelSimulationMethod": 2,
+		"triangleModelSimulationMethod": 2,
+		"triangleModelBendingMethod": 2,
+		"contactStiffnessRigidBody" : 1.0,
+		"contactStiffnessParticleRigidBody": 100.0,
+		"cloth_stiffness": 1.0,
+		"cloth_bendingStiffness": 0.005,
+		"cloth_xxStiffness": 1.0,
+		"cloth_yyStiffness": 1.0,
+		"cloth_xyStiffness": 1.0,
+		"cloth_xyPoissonRatio": 0.3,
+		"cloth_yxPoissonRatio": 0.3,
+		"cloth_normalizeStretch": 0,
+		"cloth_normalizeShear": 0, 
+		"solid_stiffness": 1.0,
+		"solid_poissonRatio": 0.2,
+		"solid_normalizeStretch": 0,
+		"solid_normalizeShear": 0
+	},	
+	"cameraLookat": [
+        0,
+        0,
+        0
+    ],
+    "cameraPosition": [
+        0,
+        10,
+        30
+    ],
+    "TriangleModels": [
+        {
+            "id": 30,
+            "geometryFile": "../models/plane_50x50.obj",
+			"translation": [0,5,-10],
+			"rotationAxis": [0, 0, 1],
+			"rotationAngle": 0.785398163,
+			"scale": [5, 5, 5],
+			"restitution" : 0.1,
+			"friction" : 0.1
+        },
+        {
+            "id": 31,
+            "geometryFile": "../models/plane_50x50.obj",
+			"translation": [0,5,-20],
+			"rotationAxis": [0, 0, 1],
+			"rotationAngle": 0.785398163,
+			"scale": [5, 5, 5],
+			"restitution" : 0.1,
+			"friction" : 0.1
+        },
+        {
+            "id": 32,
+            "geometryFile": "../models/plane_50x50.obj",
+			"translation": [-5,5,-25],
+			"rotationAxis": [0, 0, 1],
+			"rotationAngle": 0.785398163,
+			"scale": [5, 5, 5],
+			"restitution" : 0.1,
+			"friction" : 0.1
+        },
+        {
+            "id": 33,
+            "geometryFile": "../models/plane_50x50.obj",
+			"translation": [0,5,-25],
+			"rotationAxis": [0, 0, 1],
+			"rotationAngle": -0.785398163,
+			"scale": [5, 5, 5],
+			"restitution" : 0.1,
+			"friction" : 0.1
+        }
+    ],
+	"TetModels": [
+		{
+			"id": 20,
+			"nodeFile": "../models/armadillo_4k.node",
+			"eleFile": "../models/armadillo_4k.ele",
+			"visFile": "../models/armadillo.obj",
+			"resolutionSDF": [20,20,20],
+			"translation": [0,5,-5],
+			"rotationAxis": [0, 1, 0],
+			"rotationAngle": 1.57,
+			"scale": [2,2,2],
+			"staticParticles": [],
+			"restitution" : 0.1,
+			"friction" : 0.3,
+			"collisionObjectType": 5,
+			"collisionObjectFileName": "",
+            "collisionObjectScale": [
+                2,
+                2,
+                2
+            ],
+			"testMesh": 1
+		},
+        {
+			"id": 21,
+			"nodeFile": "../models/armadillo_4k.node",
+			"eleFile": "../models/armadillo_4k.ele",
+			"visFile": "../models/armadillo.obj",
+			"resolutionSDF": [20,20,20],
+			"translation": [-5,5,-15],
+			"rotationAxis": [0, 1, 0],
+			"rotationAngle": 1.57,
+			"scale": [2,2,2],
+			"staticParticles": [],
+			"restitution" : 0.1,
+			"friction" : 0.3,
+			"collisionObjectType": 5,
+			"collisionObjectFileName": "",
+            "collisionObjectScale": [
+                2,
+                2,
+                2
+            ],
+			"testMesh": 1
+		},
+        {
+			"id": 22,
+			"nodeFile": "../models/armadillo_4k.node",
+			"eleFile": "../models/armadillo_4k.ele",
+			"visFile": "../models/armadillo.obj",
+			"resolutionSDF": [20,20,20],
+			"translation": [0,5,-15],
+			"rotationAxis": [0, 1, 0],
+			"rotationAngle": 1.57,
+			"scale": [2,2,2],
+			"staticParticles": [],
+			"restitution" : 0.1,
+			"friction" : 0.3,
+			"collisionObjectType": 5,
+			"collisionObjectFileName": "",
+            "collisionObjectScale": [
+                2,
+                2,
+                2
+            ],
+			"testMesh": 1
+		},
+        {
+			"id": 23,
+			"nodeFile": "../models/armadillo_4k.node",
+			"eleFile": "../models/armadillo_4k.ele",
+			"visFile": "../models/armadillo.obj",
+			"resolutionSDF": [20,20,20],
+			"translation": [-5,5,-20],
+			"rotationAxis": [0, 1, 0],
+			"rotationAngle": 1.57,
+			"scale": [2,2,2],
+			"staticParticles": [],
+			"restitution" : 0.1,
+			"friction" : 0.3,
+			"collisionObjectType": 5,
+			"collisionObjectFileName": "",
+            "collisionObjectScale": [
+                2,
+                2,
+                2
+            ],
+			"testMesh": 1
+		}
+	],
+	"RigidBodies": [
+		{
+			"id": 0,
+			"geometryFile": "../models/cube.obj",
+			"isDynamic": 0, 
+			"density": 500, 
+			"translation": [0,0,0],
+			"rotationAxis": [1, 0, 0],
+			"rotationAngle": 0.0,
+			"scale": [100, 1, 100],
+			"restitution" : 0.6,
+			"friction" : 0.0,
+			"comment": "collisionObjectType = 1: Sphere, 2: Box, 3: Cylinder, 4: Torus, 5: SDF, 6: HollowSphere, 7: HollowBox", 
+			"collisionObjectType": 2,
+			"collisionObjectScale": [100, 1, 100]	
+		},
+		{
+			"id": 10,
+			"geometryFile": "../models/cube.obj",
+			"isDynamic": 1, 
+			"density": 500, 
+			"translation": [-5,5,0],
+			"scale": [1, 1, 1],
+			"restitution" : 0.6,
+			"friction" : 10.0,
+			"comment": "collisionObjectType = 1: Sphere, 2: Box, 3: Cylinder, 4: Torus, 5: SDF, 6: HollowSphere, 7: HollowBox", 
+			"collisionObjectType": 3
+		},
+        {
+			"id": 11,
+			"geometryFile": "../models/cube.obj",
+			"isDynamic": 1, 
+			"density": 500, 
+			"translation": [0,5,0],
+			"scale": [1, 1, 1],
+			"restitution" : 0.6,
+			"friction" : 10.0,
+			"comment": "collisionObjectType = 1: Sphere, 2: Box, 3: Cylinder, 4: Torus, 5: SDF, 6: HollowSphere, 7: HollowBox", 
+			"collisionObjectType": 3
+		},
+        {
+			"id": 12,
+			"geometryFile": "../models/cube.obj",
+			"isDynamic": 1, 
+			"density": 500, 
+			"translation": [-5,5,-5],
+			"scale": [1, 1, 1],
+			"restitution" : 0.6,
+			"friction" : 10.0,
+			"comment": "collisionObjectType = 1: Sphere, 2: Box, 3: Cylinder, 4: Torus, 5: SDF, 6: HollowSphere, 7: HollowBox", 
+			"collisionObjectType": 3
+		},
+        {
+			"id": 13,
+			"geometryFile": "../models/cube.obj",
+			"isDynamic": 1, 
+			"density": 500, 
+			"translation": [-5,5,-10],
+			"scale": [1, 1, 1],
+			"restitution" : 0.6,
+			"friction" : 10.0,
+			"comment": "collisionObjectType = 1: Sphere, 2: Box, 3: Cylinder, 4: Torus, 5: SDF, 6: HollowSphere, 7: HollowBox", 
+			"collisionObjectType": 3
+		}
+	],
+    "Kinematics": [
+        {
+            "id": 10,
+            "prescribedMotions": [
+                {
+                    "startTime": 0,
+                    "endTime": 1.5,
+                    "translation_x": "10*t-5",
+                    "translation_y": "",
+			        "translation_z": "",
+					"use_custom_reference_point": false,
+					"use_avg_reference_point": false,
+					"support_vec": [0, 1, 0],
+                    "rotation_axis": [1, 0, 0],
+                    "ang_vel": 20.0
+                }
+            ]
+        },
+		{
+            "id": 11,
+            "prescribedMotions": [
+                {
+                    "startTime": 0,
+                    "endTime": 1.5,
+                    "translation_x": "",
+                    "translation_y": "",
+			        "translation_z": "",
+			        "rotation_axis": [ 0, 1, 0 ],
+			        "ang_vel": 10.0
+                }
+            ]
+        },
+        {
+            "id": 12,
+            "prescribedMotions": [
+                {
+                    "startTime": 0,
+                    "endTime": 1.5,
+                    "translation_x": "10*t-5",
+                    "translation_y": "",
+                    "translation_z": "",
+                    "rotation_axis": [ 1, 0, 0 ],
+                    "ang_vel": 20.0
+                }
+            ]
+        },
+        {
+            "id": 13,
+            "prescribedMotions": [
+                {
+                    "startTime": 0,
+                    "endTime": 1.5,
+                    "translation_x": "10*t-5",
+                    "translation_y": "",
+                    "translation_z": "",
+                    "rotation_axis": [ 1, 0, 0 ],
+                    "ang_vel": 20.0
+                }
+            ] 
+        },
+        {
+            "id": 20,
+            "prescribedMotions": [
+                {
+                    "startTime": 0,
+                    "endTime": 1.5,
+                    "rotation_axis": [ 1, 1, 0 ],
+                    "ang_vel": 10.0
+                }
+            ]
+        },
+        {
+            "id": 21,
+            "prescribedMotions": [
+                {
+                    "startTime": 0,
+                    "endTime": 1.5,
+                    "translation_x": "10*t-5",
+                    "translation_y": "",
+                    "translation_z": "",
+                    "rotation_axis": [ 1, 0, 0 ],
+                    "ang_vel": 20.0
+                }
+            ] 
+        },
+        {
+            "id": 22,
+            "prescribedMotions": [
+                {
+                    "startTime": 0,
+                    "endTime": 1.5,
+                    "rotation_axis": [ 1, 1, 0 ],
+                    "ang_vel": 10.0
+                }
+            ]
+        },
+        {
+            "id": 23,
+            "prescribedMotions": [
+                {
+                    "startTime": 0,
+                    "endTime": 1.5,
+                    "translation_x": "10*t-5",
+                    "translation_y": "",
+                    "translation_z": "",
+                    "rotation_axis": [ 1, 0, 0 ],
+                    "ang_vel": 20.0
+                }
+            ]
+        },
+        {
+            "id": 30,
+            "prescribedMotions": [
+                {
+                    "startTime": 0,
+                    "endTime": 1.5,
+                    "rotation_axis": [1, 0, 0],
+                    "ang_vel": -10.0
+                }
+            ]
+        },
+        {
+            "id": 31,
+            "prescribedMotions": [
+                {
+                    "startTime": 0,
+                    "endTime": 1.5,
+                    "rotation_axis": [1, 0, 0],
+                    "ang_vel": 10.0
+                }
+            ]
+        },
+        {
+            "id": 32,
+            "prescribedMotions": [
+                {
+                    "startTime": 0,
+                    "endTime": 1.5,
+                    "translation_x": "10*t-5",
+                    "translation_y": "",
+                    "translation_z": "",
+                    "rotation_axis": [ 1, 0, 0 ],
+                    "ang_vel": 20.0
+                }
+            ]
+        },
+        {
+            "id": 33,
+            "prescribedMotions": [
+                {
+                    "startTime": 0,
+                    "endTime": 1.5
+                }
+            ]
+        }
+    ]
+}
+
+

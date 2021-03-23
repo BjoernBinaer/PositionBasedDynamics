@@ -4,8 +4,6 @@
 #include "Common/Common.h"
 #include "extern/tinyexpr/tinyexpr.h"
 
-using namespace std::placeholders;
-
 namespace PBD
 {
     class RigidBody;

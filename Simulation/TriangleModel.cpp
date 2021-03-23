@@ -72,15 +72,18 @@ bool TriangleModel::checkForPrescribedMotion(const Real t, ParticleData &pd)
 									[t] (PrescribedMotion* pm) { return pm->isInTime(t); })
 									!= m_prescribedMotionVector.end();
 
-	// TODO: #pragma omp for
-	for (unsigned int i = offset; i < offset + nParticles; i++)
+	#pragma omp parallel if(nParticles > MIN_PARALLEL_SIZE) default(shared)
 	{
-		if (animated)
-			pd.setParticleState(i, ParticleState::Animated);
-		else if (pd.getMass(i) != 0.0)
-			pd.setParticleState(i, ParticleState::Simulated);
-		else 
-			pd.setParticleState(i, ParticleState::Fixed);
+        #pragma omp for schedule(static) 
+		for (unsigned int i = offset; i < offset + nParticles; i++)
+		{
+			if (animated)
+				pd.setParticleState(i, ParticleState::Animated);
+			else if (pd.getMass(i) != 0.0)
+				pd.setParticleState(i, ParticleState::Simulated);
+			else 
+				pd.setParticleState(i, ParticleState::Fixed);
+		}
 	}
 
 	return animated;

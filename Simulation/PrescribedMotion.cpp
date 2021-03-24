@@ -91,11 +91,14 @@ void PrescribedMotion::rigidBodyStep(const Real t, const Real dt, RigidBody& rb)
 
     rb.setAngularVelocity(m_angularVelocity * m_rotationAxis);
 
-    AngleAxisr rotation = AngleAxisr(m_angularVelocity * dt, m_rotationAxis);
-    Quaternionr curr_rotation = rb.getRotation();
-    curr_rotation *= Quaternionr(rotation);
+    const AngleAxisr angle_ax_rot = AngleAxisr(m_angularVelocity * dt, m_rotationAxis);
+
+    // Rotation axis is given in world coordinates!
+    const Quaternionr new_rotation = rb.getRotation0() * Quaternionr(angle_ax_rot) * rb.getRotation0().inverse();
+
+    Quaternionr& curr_rotation = rb.getRotation();
+    curr_rotation *= new_rotation;
     curr_rotation.normalize();
-    rb.setRotation(curr_rotation);
     rb.rotationUpdated();
 }
 

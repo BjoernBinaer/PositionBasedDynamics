@@ -102,7 +102,7 @@ void PrescribedMotion::rigidBodyStep(const Real t, const Real dt, RigidBody& rb)
     rb.rotationUpdated();
 }
 
-void PrescribedMotion::particleStep(const Real t, const Real dt, ParticleData& pd, const unsigned int offset, const unsigned int size)
+void PrescribedMotion::particleStep(const Real t, const Real dt, ParticleData& pd, const int offset, const int size)
 {
     // Move support vector of rotation axis
     const Vector3r supp_xi = m_supportPoint;
@@ -125,7 +125,7 @@ void PrescribedMotion::particleStep(const Real t, const Real dt, ParticleData& p
     #pragma omp parallel if(size > MIN_PARALLEL_SIZE) default(shared)
 	{
         #pragma omp for schedule(static) 
-        for (unsigned int i = offset; i < offset + size; i++)
+        for (int i = offset; i < offset + size; i++)
         {
             // Particles have moved by the translation
             const Vector3r& oldPosition = pd.getPosition(i);

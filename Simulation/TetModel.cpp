@@ -106,8 +106,8 @@ void TetModel::addPrescribedMotion(const Real startTime, const Real endTime, con
 
 bool TetModel::checkForPrescribedMotion(const Real t, ParticleData &pd)
 {
-	const unsigned int offset = m_indexOffset;
-	const unsigned int nParticles = m_particleMesh.numVertices();
+	const int offset = static_cast<int>(m_indexOffset);
+	const int nParticles = static_cast<int>(m_particleMesh.numVertices());
 
 	bool animated = std::find_if(m_prescribedMotionVector.begin(), m_prescribedMotionVector.end(), 
 									[t] (PrescribedMotion* pm) { return pm->isInTime(t); })
@@ -116,7 +116,7 @@ bool TetModel::checkForPrescribedMotion(const Real t, ParticleData &pd)
 	#pragma omp parallel if(nParticles > MIN_PARALLEL_SIZE) default(shared)
 	{
         #pragma omp for schedule(static) 
-		for (unsigned int i = offset; i < offset + nParticles; i++)
+		for (int i = offset; i < offset + nParticles; i++)
 		{
 			if (animated)
 				pd.setParticleState(i, ParticleState::Animated);
@@ -132,8 +132,8 @@ bool TetModel::checkForPrescribedMotion(const Real t, ParticleData &pd)
 
 void TetModel::applyCurrentPrescribedMotion(const Real t, const Real delta_t, ParticleData& pd)
 {
-	const unsigned int offset = m_indexOffset;
-	const unsigned int nParticles = m_particleMesh.numVertices();
+	const int offset = static_cast<int>(m_indexOffset);
+	const int nParticles = static_cast<int>(m_particleMesh.numVertices());
 
 	// Get current 
 	Real delta = std::numeric_limits<Real>::max();

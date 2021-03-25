@@ -45,7 +45,7 @@ namespace PBD
             bool isInTime(const Real t);
 
             void rigidBodyStep(const Real t, const Real dt, RigidBody& rb);
-            void particleStep(const Real t, const Real dt, ParticleData& pd, const unsigned int offset, const unsigned int size);
+            void particleStep(const Real t, const Real dt, ParticleData& pd, const int offset, const int size);
 
             FORCE_INLINE const Real getStartTime() const
             {

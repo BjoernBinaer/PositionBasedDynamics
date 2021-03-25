@@ -135,9 +135,17 @@ namespace PBD
 			void initBody(const Real density, const Vector3r &x, const Quaternionr &rotation,
 				const VertexData &vertices, const Utilities::IndexedFaceMesh &mesh, const Vector3r &scale = Vector3r(1.0, 1.0, 1.0))
 			{
-				m_rbState = RigidBodyState::Simulated;
+				if (density == 0)
+				{
+					setRigidBodyState(RigidBodyState::Fixed);
+					m_mass = 0.0;
+				}
+				else
+				{
+					setRigidBodyState(RigidBodyState::Simulated);
+					m_mass = 1.0;
+				}
 
-				m_mass = 1.0;
 				m_inertiaTensor = Vector3r(1.0, 1.0, 1.0);
 				m_x = x;
 				m_x0 = x;

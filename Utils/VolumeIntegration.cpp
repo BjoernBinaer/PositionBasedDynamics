@@ -15,21 +15,21 @@ VolumeIntegration::VolumeIntegration(const unsigned int nVertices, const unsigne
 	// compute center of mass
 	m_x.setZero();
 	for (unsigned int i(0); i < m_nVertices; ++i)
-		m_x += vertices[i];
-	m_x /= (Real)m_nVertices;
+		m_x += vertices[i].cast<double>();
+	m_x /= static_cast<double>(m_nVertices);
 
 	m_vertices.resize(nVertices);
 	for (unsigned int i(0); i < m_nVertices; ++i)
-		m_vertices[i] = vertices[i] - m_x;
+		m_vertices[i] = vertices[i].cast<double>() - m_x;
 
 	for (unsigned int i(0); i < m_nFaces; ++i)
     {
-		const Vector3r &a = m_vertices[m_indices[3 * i]];
-		const Vector3r &b = m_vertices[m_indices[3 * i + 1]];
-		const Vector3r &c = m_vertices[m_indices[3 * i + 2]];
+		const Eigen::Vector3d &a = m_vertices[m_indices[3 * i]];
+		const Eigen::Vector3d &b = m_vertices[m_indices[3 * i + 1]];
+		const Eigen::Vector3d &c = m_vertices[m_indices[3 * i + 2]];
 
-		const Vector3r d1 = b - a;
-		const Vector3r d2 = c - a;
+		const Eigen::Vector3d d1 = b - a;
+		const Eigen::Vector3d d2 = c - a;
 
 		m_face_normals[i] = d1.cross(d2);
         if (m_face_normals[i].isZero(1.e-10)) 
@@ -41,25 +41,25 @@ VolumeIntegration::VolumeIntegration(const unsigned int nVertices, const unsigne
     }
 }
 
-void VolumeIntegration::compute_inertia_tensor(Real density)
+void VolumeIntegration::compute_inertia_tensor(double density)
 {
     volume_integrals();
-    m_volume = static_cast<Real>(T0);
+    m_volume = static_cast<double>(T0);
 
-    m_mass = static_cast<Real>(density * T0);
+    m_mass = static_cast<double>(density * T0);
 
     /* compute center of mass */
-    m_r[0] = static_cast<Real>(T1[0] / T0);
-    m_r[1] = static_cast<Real>(T1[1] / T0);
-    m_r[2] = static_cast<Real>(T1[2] / T0);
+    m_r[0] = static_cast<double>(T1[0] / T0);
+    m_r[1] = static_cast<double>(T1[1] / T0);
+    m_r[2] = static_cast<double>(T1[2] / T0);
 
     /* compute inertia tensor */
-    m_theta(0, 0) = static_cast<Real>(density * (T2[1] + T2[2]));
-    m_theta(1, 1) = static_cast<Real>(density * (T2[2] + T2[0]));
-    m_theta(2, 2) = static_cast<Real>(density * (T2[0] + T2[1]));
-    m_theta(0, 1) = m_theta(1, 0) = -density * static_cast<Real>(TP[0]);
-    m_theta(1, 2) = m_theta(2, 1) = -density * static_cast<Real>(TP[1]);
-    m_theta(2, 0) = m_theta(0, 2) = -density * static_cast<Real>(TP[2]);
+    m_theta(0, 0) = static_cast<double>(density * (T2[1] + T2[2]));
+    m_theta(1, 1) = static_cast<double>(density * (T2[2] + T2[0]));
+    m_theta(2, 2) = static_cast<double>(density * (T2[0] + T2[1]));
+    m_theta(0, 1) = m_theta(1, 0) = -density * static_cast<double>(TP[0]);
+    m_theta(1, 2) = m_theta(2, 1) = -density * static_cast<double>(TP[1]);
+    m_theta(2, 0) = m_theta(0, 2) = -density * static_cast<double>(TP[2]);
 
     /* translate inertia tensor to center of mass */
     m_theta(0, 0) -= m_mass * (m_r[1]*m_r[1] + m_r[2]*m_r[2]);
@@ -75,12 +75,12 @@ void VolumeIntegration::compute_inertia_tensor(Real density)
 
 void VolumeIntegration::projection_integrals(unsigned int f)
 {
-    Real a0, a1, da;
-    Real b0, b1, db;
-    Real a0_2, a0_3, a0_4, b0_2, b0_3, b0_4;
-    Real a1_2, a1_3, b1_2, b1_3;
-    Real C1, Ca, Caa, Caaa, Cb, Cbb, Cbbb;
-    Real Cab, Kab, Caab, Kaab, Cabb, Kabb;
+    double a0, a1, da;
+    double b0, b1, db;
+    double a0_2, a0_3, a0_4, b0_2, b0_3, b0_4;
+    double a1_2, a1_3, b1_2, b1_3;
+    double C1, Ca, Caa, Caaa, Cb, Cbb, Cbbb;
+    double Cab, Kab, Caab, Kaab, Cabb, Kabb;
 
     P1 = Pa = Pb = Paa = Pab = Pbb = Paaa = Paab = Pabb = Pbbb = 0.0;
 
@@ -132,9 +132,9 @@ void VolumeIntegration::projection_integrals(unsigned int f)
 
 void VolumeIntegration::face_integrals(unsigned int f)
 {
-  Real w;
-  Vector3r n;
-  Real k1, k2, k3, k4;
+  double w;
+  Eigen::Vector3d n;
+  double k1, k2, k3, k4;
 
   projection_integrals(f);
 
@@ -167,7 +167,7 @@ void VolumeIntegration::face_integrals(unsigned int f)
 
 void VolumeIntegration::volume_integrals()
 {
-    Real nx, ny, nz;
+    double nx, ny, nz;
 
     T0  = T1[0] = T1[1] = T1[2] 
         = T2[0] = T2[1] = T2[2] 
@@ -175,7 +175,7 @@ void VolumeIntegration::volume_integrals()
 
 	for (unsigned int i(0); i < m_nFaces; ++i)
     {
-        Vector3r const& n = m_face_normals[i];
+        Eigen::Vector3d const& n = m_face_normals[i];
         nx = std::abs(n[0]);
         ny = std::abs(n[1]);
         nz = std::abs(n[2]);

@@ -135,17 +135,7 @@ namespace PBD
 			void initBody(const Real density, const Vector3r &x, const Quaternionr &rotation,
 				const VertexData &vertices, const Utilities::IndexedFaceMesh &mesh, const Vector3r &scale = Vector3r(1.0, 1.0, 1.0))
 			{
-				if (density == 0)
-				{
-					setRigidBodyState(RigidBodyState::Fixed);
-					m_mass = 0.0;
-				}
-				else
-				{
-					setRigidBodyState(RigidBodyState::Simulated);
-					m_mass = 1.0;
-				}
-
+				m_mass = 1.0;
 				m_inertiaTensor = Vector3r(1.0, 1.0, 1.0);
 				m_x = x;
 				m_x0 = x;
@@ -171,6 +161,11 @@ namespace PBD
 				getGeometry().initMesh(vertices.size(), mesh.numFaces(), &vertices.getPosition(0), mesh.getFaces().data(), mesh.getUVIndices(), mesh.getUVs(), scale);
 				determineMassProperties(density);
 				getGeometry().updateMeshTransformation(getPosition(), getRotationMatrix());
+
+				if (m_mass == 0.0)
+					setRigidBodyState(RigidBodyState::Fixed);
+				else
+					setRigidBodyState(RigidBodyState::Simulated);
 			}
 
 			void addPrescribedMotion(const Real startTime, const Real endTime,
@@ -284,10 +279,10 @@ namespace PBD
 				VertexData &vd = m_geometry.getVertexDataLocal();
 				
 				Utilities::VolumeIntegration vi(m_geometry.getVertexDataLocal().size(), m_geometry.getMesh().numFaces(), &m_geometry.getVertexDataLocal().getPosition(0), m_geometry.getMesh().getFaces().data());
-				vi.compute_inertia_tensor(density);
+				vi.compute_inertia_tensor(static_cast<double>(density));
 
 				// Diagonalize Inertia Tensor
-				Eigen::SelfAdjointEigenSolver<Matrix3r> es(vi.getInertia());
+				Eigen::SelfAdjointEigenSolver<Matrix3r> es(vi.getInertia().cast<Real>());
 				Vector3r inertiaTensor = es.eigenvalues();
 				Matrix3r R = es.eigenvectors();
 
@@ -300,7 +295,7 @@ namespace PBD
 				for (unsigned int i = 0; i < vd.size(); i++)
 					vd.getPosition(i) = m_rot * vd.getPosition(i) + m_x0;
 
-				Vector3r x_MAT = vi.getCenterOfMass();
+				Vector3r x_MAT = vi.getCenterOfMass().cast<Real>();
 				R = m_rot * R;
 				x_MAT = m_rot * x_MAT + m_x0;
 

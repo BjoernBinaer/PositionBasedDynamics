@@ -54,20 +54,19 @@ macro(_eigen3_check_version)
 endmacro(_eigen3_check_version)
 
 if (EIGEN3_INCLUDE_DIR)
-
   # in cache already
   _eigen3_check_version()
   set(EIGEN3_FOUND ${EIGEN3_VERSION_OK})
+endif(EIGEN3_INCLUDE_DIR)
 
-else (EIGEN3_INCLUDE_DIR)
-
+if (NOT EIGEN3_INCLUDE_DIR OR NOT EIGEN3_VERSION_OK)
   find_path(EIGEN3_INCLUDE_DIR NAMES signature_of_eigen3_matrix_library
-      PATHS
-	  ${PROJECT_SOURCE_DIR}/extern/eigen
-      ${CMAKE_INSTALL_PREFIX}/include
-      ${KDE4_INCLUDE_DIR}	  
-      PATH_SUFFIXES eigen3 eigen
-    )
+    PATHS ${PROJECT_SOURCE_DIR}/extern/eigen
+    #${CMAKE_INSTALL_PREFIX}/include
+    #${KDE4_INCLUDE_DIR}
+    PATH_SUFFIXES eigen3 eigen
+    NO_DEFAULT_PATH
+  )
 
   if(EIGEN3_INCLUDE_DIR)
     _eigen3_check_version()
@@ -78,5 +77,5 @@ else (EIGEN3_INCLUDE_DIR)
 
   mark_as_advanced(EIGEN3_INCLUDE_DIR)
 
-endif(EIGEN3_INCLUDE_DIR)
+endif(NOT EIGEN3_INCLUDE_DIR OR NOT EIGEN3_VERSION_OK)
 
